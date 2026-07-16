@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eletrozoom Arts & Personalizados</title>
+    <style>
+        :root { --primary: #e31e24; --green: #25d366; --bg: #f4f4f4; --dark: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        
+        .page { display: none; padding-bottom: 50px; }
+        .active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        
+        /* Topo */
+        .loja-topo { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .busca-box { position: relative; flex-grow: 1; margin: 0 15px; }
+        .busca-box input { width: 100%; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
+        .carrinho-topo { cursor: pointer; font-size: 1.5rem; position: relative; }
+        #contagem-carrinho { background: var(--primary); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.75rem; position: absolute; top: -5px; right: -10px; }
+
+        /* Banner e Resumo Rápido */
+        .banner-container { text-align: center; padding: 10px; }
+        .resumo-vitrine { background: #fff; margin: 10px; padding: 15px; border-radius: 10px; border-left: 5px solid var(--primary); font-weight: bold; font-size: 1.1rem; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* Categorias (95px) */
+        .secao-colecoes { padding: 20px 0; background: white; border-bottom: 1px solid #eee; }
+        .colecoes-container { display: flex; overflow-x: auto; gap: 20px; padding: 0 20px; scrollbar-width: none; }
+        .colecao-item { flex: 0 0 auto; text-align: center; cursor: pointer; width: 100px; }
+        .bola { width: 95px; height: 95px; border-radius: 50%; background: white; margin: 0 auto 10px; border: 3px solid #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .bola img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Grid de Produtos */
+        .produtos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; padding: 20px; }
+        .card { background: white; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; }
+        .card img { width: 100%; height: 140px; object-fit: contain; }
+        .card .preco { color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-top: 10px; }
+        .btn-add { background: var(--dark); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* Formulário */
+        .input-box { margin-bottom: 15px; text-align: left; }
+        .input-box label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
+        .input-box input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .total-banner { background: var(--primary); color: white; padding: 20px; text-align: center; font-size: 1.5rem; font-weight: 800; border-radius: 10px; margin: 20px 0; }
+        .frete-info { color: #2e7d32; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; }
+        .btn-finish { background: var(--green); color: white; border: none; padding: 18px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <div id="p-vitrine" class="page active">
+        <header class="loja-topo">
+            <div class="busca-box">
+                <input type="text" placeholder="Pesquisar..." onkeyup="filtrar(this.value)">
+            </div>
+            <div class="carrinho-topo" onclick="nav('p-checkout')">
+                🛒 <span id="contagem-carrinho">0</span>
+            </div>
+        </header>
+
+        <div class="banner-container">
+            <img src="https://i.postimg.cc/Znc6cdYb/Banner-Eletrozoom-(1).jpg" style="width: 100%; border-radius: 10px; max-width: 95%;">
+        </div>
+
+        <div id="resumo-total-vitrine" class="resumo-vitrine">
+            🛒 Subtotal: R$ <span id="val-subtotal-vitrine">0,00</span>
+        </div>
+
+        <section class="secao-colecoes">
+            <div class="colecoes-container">
+                <div class="colecao-item" onclick="filtrar('Caixa')">
+                    <div class="bola"><img src="https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome.png?v=1756999070&width=700"></div>
+                    <span>Caixas</span>
+                </div>
+                <div class="colecao-item" onclick="filtrar('Fone')">
+                    <div class="bola"><img src="https://i.postimg.cc/g0XngBHW/Whats-App-Image-2026-03-04-at-16-21-24.jpg"></div>
+                    <span>Fones</span>
+                </div>
+            </div>
+        </section>
+
+        <div id="vitrine" class="produtos-grid"></div>
+    </div>
+
+    <div id="p-checkout" class="page">
+        <div class="container">
+            <button onclick="nav('p-vitrine')" style="margin-bottom:20px; border:none; background:#eee; padding:10px; border-radius:8px; cursor:pointer;">← Voltar</button>
+            <h2>Dados de Entrega</h2>
+            
+            <div class="input-box"><label>Nome:</label><input type="text" id="f-nome"></div>
+            <div class="input-box"><label>WhatsApp:</label><input type="tel" id="f-zap"></div>
+            <div class="input-box">
+                <label>CEP:</label>
+                <input type="text" id="f-cep" maxlength="8" onkeyup="if(this.value.length==8) buscarCep(this.value)">
+            </div>
+            
+            <div id="info-frete" class="frete-info">🚚 Frete: R$ 25,00</div>
+
+            <div class="input-box"><label>Rua/Avenida:</label><input type="text" id="f-rua"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="input-box" style="flex:1"><label>Quadra:</label><input type="text" id="f-quadra"></div>
+                <div class="input-box" style="flex:1"><label>Lote:</label><input type="text" id="f-lote"></div>
+            </div>
+            <div class="input-box"><label>Bairro:</label><input type="text" id="f-bairro"></div>
+            <div class="input-box"><label>Referência:</label><input type="text" id="f-ref"></div>
+
+            <div id="total-display" class="total-banner">Total: R$ 0,00</div>
+
+            <button class="btn-finish" onclick="enviarWhatsApp()">FINALIZAR NO WHATSAPP</button>
+        </div>
+    </div>
+
+    <script>
+        let carrinho = [];
+        const taxaEntrega = 25.00;
+
+        const produtos = [
+        // --- CAIXAS DE SOM (101 ao 120) ---
+        { id: 101, nome: "Caixa de Som Basike Ba-RAD 044 50W", preco_atual: 570.00, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Portatil_Bluetooth_Com_Radio_Fm_Subwoofer_Ativo_Boombox_Estereo_Hifi_Tws_1_1_Bluetooth_5.3_Bateria_8_Horas_Ipx5_50w_Com_Rgb_Powerbank_para_iPhone_E_Samsung_Cor_Preto.jpg?v=1753149464&width=700", ficha: "50W RMS | Bass Boost | Bateria 8h" },
+        { id: 102, nome: "Caixa de Som Basike Ba RAD 021 15W", preco_atual: 349.90, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomPortatilBluetoothSubwooferTwsIpx5ComRgb_4.jpg?v=1753149227&width=700", ficha: "15W RMS | IPX5 | TWS 1+1" },
+        { id: 103, nome: "Caixa de Som Basike Ba RAD 179 100W", preco_atual: 999.90, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome.png?v=1756999070&width=700", ficha: "100W | IPX6 | RGB Dinâmico" },
+        { id: 104, nome: "Caixa de Som Basike Ba RAD 180 200W", preco_atual: 1399.00, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSom200wBasike13.5PolPotenteBassBoostEstereo_8.jpg?v=1753147045&width=700", ficha: "200W RMS | HiFi Audio | Bass Boost" },
+        { id: 105, nome: "Caixa de Som Basike Ba RAD 172 80W", preco_atual: 685.00, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2025-07-21T221102.477.jpg?v=1753146850&width=700", ficha: "80W | Ajuste de Graves | BT 5.3" },
+        { id: 106, nome: "Caixa de Som Basike Ba RAD 133 100W", preco_atual: 889.90, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2025-07-21T220507.425.jpg?v=1753146324&width=700", ficha: "100W | Grave Potente | Bateria 10Ah" },
+        { id: 107, nome: "Caixa de Som Basike Ba RAD 015 60W", preco_atual: 930.00, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomPortatilBluetoothSubwooferIpx6TwsComRgb_4.jpg?v=1753145629&width=700", ficha: "60W | IPX6 | Som Surround" },
+        { id: 108, nome: "Caixa de Som Basike Ba RAD 207 80W", preco_atual: 570.00, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2025-07-21T214702.706_952c1d51-200b-46aa-9d27-7300ec755cd2.jpg?v=1761316032&width=700", ficha: "80W | Som 360° | RGB Inteligente" },
+        { id: 109, nome: "Caixa de Som Basike Ba RAD 033 60W", preco_atual: 600.00, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Bluetooth_Portatil_Subwoofer_Tws_1_1_Ipx6_Rgb_4.jpg?v=1754067754&width=700", ficha: "60W | Subwoofer Ativo | TWS" },
+        { id: 110, nome: "Caixa de Som Basike Ba RAR 134 300W", preco_atual: 2400.00, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2026-02-24T084907.015.jpg?v=1771933842&width=700", ficha: "300W | IPX6 | Bateria 30.000mAh" },
+        { id: 111, nome: "Caixa de Som Basike Ba RAD 253 100W", preco_atual: 999.00, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome.jpg?v=1755717877&width=700", ficha: "100W | Compacta | Bluetooth 5.3" },
+        { id: 112, nome: "Caixa de Som Basike Ba RAD 252 400W", preco_atual: 3200.00, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomBluetooth400w48000mahTwsIpx6BoomboxFesta_2.jpg?v=1756309673&width=700", ficha: "400W | Bateria 48.000mAh | Ultra Bass" },
+        { id: 113, nome: "Caixa de Som Basike Ba-RAD 251 200W", preco_atual: 2500.00, img: "https://basikebrasil.com.br/cdn/shop/files/1.jpg?v=1756402568&width=700", ficha: "200W RMS | IPX6 | Bluetooth 5.4" },
+        { id: 114, nome: "Caixa de Som Basike Ba RAD 293 100W", preco_atual: 799.90, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Bluetooth_100w_10000mah_Tws_Ipx6_Boombox_Festa_2.jpg?v=1768412094&width=700", ficha: "100W | Bateria 10.000mAh | Boombox" },
+        { id: 115, nome: "Caixa de Som Basike Ba RAD 294 100W", preco_atual: 700.00, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_19.jpg?v=1756756124&width=700", ficha: "100W | Subwoofer | 8h Bateria" },
+        { id: 116, nome: "Caixa de Som Basike Ba RAD 132 40W", preco_atual: 700.00, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_de_Som_Basike_Ba-RAD132_Bluetooth_IPX7_Estereo_TWS_80W_RGB_10h_Autonomia_8000mAh_Power_Bank_A_Prova_D_Agua_Grave_Profundo_Luz_Sincronizada_para_Praia_Piscina_Outdoor_10.jpg?v=1756863106&width=700", ficha: "40W | IPX7 À Prova D'água | RGB" },
+        { id: 117, nome: "Caixa de Som Basike Ba RAD 136 40W", preco_atual: 430.00, img: "https://basikebrasil.com.br/cdn/shop/files/BasikeCaixaDeSomBluetoothEstereoPortatilPartyTws_2.jpg?v=1756864370&width=700", ficha: "40W | Party TWS | Estéreo" },
+        { id: 118, nome: "Caixa de Som Basike Ba RAD 289 160W", preco_atual: 850.00, img: "https://basikebrasil.com.br/cdn/shop/files/Prancheta_16.png?v=1757618886&width=700", ficha: "160W | 15h de Música | IPX6" },
+        { id: 119, nome: "Caixa de Som Basike Ba RAD 066 120W", preco_atual: 999.00, img: "https://basikebrasil.com.br/cdn/shop/files/Designsemnome_29.jpg?v=1757382332&width=700", ficha: "120W | Microfone Incluso | Karaoke" },
+        { id: 120, nome: "Caixa de Som Basike Ba RAD 337 80W", preco_atual: 530.00, img: "https://basikebrasil.com.br/cdn/shop/files/MercadoLivre1200x1200_1.jpg?v=1759347680&width=700", ficha: "80W | Boombox TWS | Som 360°" },
+
+        // --- FONES DE OUVIDO (121 ao 126) ---
+        { id: 121, nome: "Fone Basike FON-9856 HiFi", preco_atual: 120.00, img: "https://i.postimg.cc/1z2y4mFj/Whats-App-Image-2026-03-04-at-16-09-53.jpg", ficha: "Bluetooth 5.3 | Áudio HiFi Bateria até 5h Microfone com Redução de Ruído" },
+        { id: 122, nome: "Fone Basike FON-239 Esportivo", preco_atual: 185.00, img: "https://i.postimg.cc/wM352kMq/Whats-App-Image-2026-03-04-at-16-15-53.jpg", ficha: "Bluetooth 5.4 | Bateria 60h total Gancho ergonômico 45°Resistência IPX5" },
+        { id: 123, nome: "Fone Basike FON-6697 Tela Touch", preco_atual: 249.00, img: "https://i.postimg.cc/5jdHz5CV/Whats-App-Image-2026-03-04-at-16-17-56.jpg", ficha: "Estojo com Tela LCD Touch | Bluetooth 5.4 | Som HD Autonomia total de 18h" },
+        { id: 124, nome: "Fone Basike FON-142 Pro Corrida", preco_atual: 168.00, img: "https://i.postimg.cc/6Q3dt0Vb/Whats-App-Image-2026-03-04-at-16-19-26.jpg", ficha: "Bluetooth 5.4 | Bateria 45h | Display Digital LED Resistente à água IPX5" },
+        { id: 125, nome: "Fone Basike FON-249 Sport 3D", preco_atual: 195.00, img: "https://i.postimg.cc/HxM8kPr9/Whats-App-Image-2026-03-04-at-16-20-40-1.jpg", ficha: "Som HIFI 3D | Drivers 12mm | Bateria para 28 dias (espera) Resistência IPX6" },
+        { id: 126, nome: "Fone Basike FON-231 ANC Esportivo", preco_atual: 210.00, img: "https://i.postimg.cc/g0XngBHW/Whats-App-Image-2026-03-04-at-16-21-24.jpg", ficha: "Bluetooth 5.4 | Cancelamento ANC Som Hi-Fi Alta Fidelidade | Ideal para treinos intensos" }
+        ];
+
+        function tratarPreco(preco) {
+            if (!preco) return 0;
+            let p = String(preco).replace('R$', '').replace(/\s/g, '').replace(',', '.');
+            return parseFloat(p) || 0;
+        }
+
+        function nav(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            atualizarValores();
+            window.scrollTo(0,0);
+        }
+
+        function render(lista) {
+            const vitrine = document.getElementById('vitrine');
+            vitrine.innerHTML = lista.map(p => `
+                <div class="card">
+                    <img src="${p.img}">
+                    <h3>${p.nome}</h3>
+                    <div class="preco">R$ ${tratarPreco(p.preco_atual).toFixed(2).replace('.', ',')}</div>
+                    <button class="btn-add" onclick="addCarrinho(${p.id})">ADICIONAR</button>
+                </div>
+            `).join('');
+        }
+
+        function addCarrinho(id) {
+            const prod = produtos.find(p => p.id === id);
+            if(prod) {
+                carrinho.push(prod);
+                document.getElementById('contagem-carrinho').innerText = carrinho.length;
+                
+                const divSub = document.getElementById('resumo-total-vitrine');
+                divSub.style.display = 'block';
+                atualizarValores();
+                
+                alert(prod.nome + " adicionado!");
+            }
+        }
+
+        function filtrar(termo) {
+            render(produtos.filter(p => p.nome.toLowerCase().includes(termo.toLowerCase())));
+        }
+
+        function buscarCep(val) {
+            const cep = val.replace(/\D/g, '');
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(r => r.json())
+                .then(d => {
+                    if(!d.erro) {
+                        document.getElementById('f-rua').value = d.logradouro;
+                        document.getElementById('f-bairro').value = d.bairro;
+                        document.getElementById('info-frete').style.display = 'block';
+                        atualizarValores();
+                    }
+                });
+        }
+
+        function atualizarValores() {
+            let sub = 0;
+            carrinho.forEach(i => sub += tratarPreco(i.preco_atual));
+            
+            document.getElementById('val-subtotal-vitrine').innerText = sub.toFixed(2).replace('.', ',');
+            
+            const total = sub > 0 ? sub + taxaEntrega : 0;
+            document.getElementById('total-display').innerText = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function enviarWhatsApp() {
+            const nome = document.getElementById('f-nome').value;
+            if(!nome || carrinho.length === 0) return alert("Preencha seu nome e adicione produtos!");
+
+            let produtosTexto = "";
+            let subtotal = 0;
+            
+            carrinho.forEach(i => {
+                let p = tratarPreco(i.preco_atual);
+                subtotal += p;
+                produtosTexto += `✅ *${i.nome}*%0A`;
+                produtosTexto += `R$ ${p.toFixed(2).replace('.', ',')}%0A`;
+                produtosTexto += `Link da foto: ${i.img}%0A%0A`; 
+            });
+
+            const totalFinal = subtotal + taxaEntrega;
+
+            const msg = `*ELETROZOOM - NOVO PEDIDO*%0A%0A` +
+                        `*👤 CLIENTE:* ${nome}%0A` +
+                        `*📍 ENDEREÇO:* ${document.getElementById('f-rua').value}%0A` +
+                        `*🏠 QD/LT:* ${document.getElementById('f-quadra').value}/${document.getElementById('f-lote').value}%0A` +
+                        `*🏙️ BAIRRO:* ${document.getElementById('f-bairro').value}%0A%0A` +
+                        `*🛒 ITENS DO PEDIDO:*%0A${produtosTexto}` +
+                        `*------------------------------*%0A` +
+                        `*SUBTOTAL:* R$ ${subtotal.toFixed(2).replace('.', ',')}%0A` +
+                        `*FRETE FIXO:* R$ 25,00%0A` +
+                        `*💰 TOTAL FINAL: R$ ${totalFinal.toFixed(2).replace('.', ',')}*`;
+
+            window.open(`https://wa.me/5562995175110?text=${msg}`);
+        }
+
+        window.onload = () => render(produtos);
+    </script>
+</body>
+</html>
