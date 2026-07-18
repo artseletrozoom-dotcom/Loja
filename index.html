@@ -15,21 +15,25 @@
 
         .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         
+        /* Topo */
         .loja-topo { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
         .busca-box { position: relative; flex-grow: 1; margin: 0 15px; }
         .busca-box input { width: 100%; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
         .carrinho-topo { cursor: pointer; font-size: 1.5rem; position: relative; }
         #contagem-carrinho { background: var(--primary); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.75rem; position: absolute; top: -5px; right: -10px; }
 
+        /* Banner e Resumo Rápido */
         .banner-container { text-align: center; padding: 10px; }
         .resumo-vitrine { background: #fff; margin: 10px; padding: 15px; border-radius: 10px; border-left: 5px solid var(--primary); font-weight: bold; font-size: 1.1rem; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
+        /* Categorias */
         .secao-colecoes { padding: 20px 0; background: white; border-bottom: 1px solid #eee; }
         .colecoes-container { display: flex; overflow-x: auto; gap: 20px; padding: 0 20px; scrollbar-width: none; }
         .colecao-item { flex: 0 0 auto; text-align: center; cursor: pointer; width: 100px; }
         .bola { width: 95px; height: 95px; border-radius: 50%; background: white; margin: 0 auto 10px; border: 3px solid #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .bola img { width: 100%; height: 100%; object-fit: cover; }
 
+        /* Grid de Produtos */
         .produtos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; padding: 20px; }
         .card { background: white; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; }
         .card img { width: 100%; height: 140px; object-fit: contain; }
@@ -40,60 +44,132 @@
         .btn-add:hover { background: var(--primary); }
         .btn-add:disabled { background: #ccc; cursor: not-allowed; }
 
+        /* Formulário */
         .input-box { margin-bottom: 15px; text-align: left; }
         .input-box label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
         .input-box input, .input-box select, .input-box textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
         .total-banner { background: var(--primary); color: white; padding: 20px; text-align: center; font-size: 1.5rem; font-weight: 800; border-radius: 10px; margin: 20px 0; }
         .frete-info { color: #2e7d32; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; }
         
+        /* Botões de Pagamento */
+        .payment-methods { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .btn-payment { flex: 1; min-width: 140px; padding: 15px; border-radius: 8px; border: 2px solid #ddd; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+        .btn-payment:hover { border-color: var(--primary); background: #f0f0f0; }
+        .btn-payment.active { border-color: var(--primary); background: var(--primary); color: white; }
+
+        /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto; }
         .modal-content { background-color: white; margin: 3% auto; padding: 25px; border-radius: 10px; width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto; }
         .modal-header { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close:hover { color: black; }
 
+        /* Abas Admin */
         .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; overflow-x: auto; }
         .admin-tab { padding: 12px 20px; background: #f0f0f0; cursor: pointer; border: none; border-radius: 5px 5px 0 0; font-weight: bold; white-space: nowrap; }
         .admin-tab.active { background: var(--primary); color: white; }
         .admin-tab-content { display: none; }
         .admin-tab-content.active { display: block; }
 
+        /* Tabela Admin */
         .admin-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 0.9rem; }
         .admin-table th { background: #f0f0f0; padding: 12px; text-align: left; font-weight: bold; border-bottom: 2px solid #ddd; }
         .admin-table td { padding: 12px; border-bottom: 1px solid #ddd; }
-        .admin-table input { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
+        .admin-table input, .admin-table textarea { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
         .admin-table button { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
         .admin-table button:hover { background: #c91a1f; }
 
+        /* Cores */
         .cores-container { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
         .cor-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f0f0; padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.9rem; }
-        .cor-badge button { background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem; }
+        .cor-badge button { background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem; margin-left: 5px; }
 
+        /* Botões */
         .btn-group-admin { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
         .btn-primary { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; }
+        .btn-primary:hover { background: #c91a1f; }
         .btn-success { background: var(--green); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; }
+        .btn-success:hover { background: #1fa857; }
         .btn-danger { background: #ff4444; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
         .alert { padding: 12px; margin: 10px 0; border-radius: 5px; }
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
         .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-        .login-admin-container { text-align: center; padding: 40px 20px; }
-        .login-admin-container h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.8rem; }
-        .login-admin-container .lock-icon { font-size: 3rem; margin-bottom: 20px; }
-        .login-admin-container input { width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; font-size: 1rem; }
-        .login-admin-container input:focus { outline: none; border-color: var(--primary); }
-        .login-admin-container .btn-login { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
-        .login-admin-container .btn-login:hover { background: #c91a1f; }
+        /* Login Admin */
+        .login-admin-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
 
-        .sync-status { position: fixed; bottom: 10px; right: 10px; padding: 10px 15px; background: #4CAF50; color: white; border-radius: 20px; font-size: 0.85rem; display: none; z-index: 999; }
+        .login-admin-container h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
 
+        .login-admin-container .lock-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .login-admin-container input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .login-admin-container input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .login-admin-container .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .login-admin-container .btn-login:hover {
+            background: #c91a1f;
+        }
+
+        /* Status Sincronização */
+        .sync-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            padding: 10px 15px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 999;
+        }
+
+        /* Relatório */
         .relatorio-card { background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid var(--primary); }
         .relatorio-item { display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.95rem; }
         .relatorio-lucro { color: var(--green); font-weight: bold; }
+        .relatorio-prejuizo { color: #ff6b6b; font-weight: bold; }
         .relatorio-total { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; font-size: 1.2rem; font-weight: bold; margin-top: 15px; }
 
+        .input-box small { color: #666; font-size: 0.85rem; }
+
+        /* Input para adicionar cores */
         .cores-input-group { display: flex; gap: 8px; margin-top: 8px; }
         .cores-input-group input { flex: 1; padding: 8px; }
         .cores-input-group button { padding: 8px 15px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; }
@@ -101,6 +177,7 @@
 </head>
 <body>
 
+    <!-- PÁGINA VITRINE -->
     <div id="p-vitrine" class="page active">
         <header class="loja-topo">
             <div class="busca-box">
@@ -135,6 +212,7 @@
         <div id="vitrine" class="produtos-grid"></div>
     </div>
 
+    <!-- PÁGINA CHECKOUT -->
     <div id="p-checkout" class="page">
         <div class="container">
             <button onclick="nav('p-vitrine')" style="margin-bottom:20px; border:none; background:#eee; padding:10px; border-radius:8px; cursor:pointer;">← Voltar</button>
@@ -160,10 +238,12 @@
 
             <div id="total-display" class="total-banner">Total: R$ 0,00</div>
 
+            <h3>Confirmar Pedido:</h3>
             <button class="btn-success" onclick="finalizarPedido()" style="width: 100%; font-size: 1.1rem;">💬 Confirmar pelo WhatsApp</button>
         </div>
     </div>
 
+    <!-- MODAL ADMIN -->
     <div id="adminModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -171,6 +251,7 @@
                 <span class="close" onclick="fecharAdmin()">&times;</span>
             </div>
             
+            <!-- LOGIN ADMIN -->
             <div id="loginAdmin" class="login-admin-container">
                 <div class="lock-icon">🔐</div>
                 <h2>Acesso Restrito</h2>
@@ -179,7 +260,9 @@
                 <button class="btn-login" onclick="autenticarAdmin()">🔓 Acessar</button>
             </div>
 
+            <!-- CONTEÚDO ADMIN -->
             <div id="adminContent" style="display: none;">
+                <!-- ABAS -->
                 <div class="admin-tabs">
                     <button class="admin-tab active" onclick="abrirAbaAdmin('editar')">✏️ Produtos</button>
                     <button class="admin-tab" onclick="abrirAbaAdmin('adicionar')">➕ Novo</button>
@@ -187,6 +270,7 @@
                     <button class="admin-tab" onclick="abrirAbaAdmin('config')">⚙️ Config</button>
                 </div>
 
+                <!-- ABA 1: EDITAR PRODUTOS -->
                 <div id="aba-editar" class="admin-tab-content active">
                     <h3>📋 Gerenciar Produtos</h3>
                     <div style="max-height: 600px; overflow-y: auto;">
@@ -207,6 +291,7 @@
                     </div>
                 </div>
 
+                <!-- ABA 2: ADICIONAR NOVO PRODUTO -->
                 <div id="aba-adicionar" class="admin-tab-content">
                     <h3>➕ Adicionar Novo Produto</h3>
                     <div class="input-box">
@@ -220,6 +305,7 @@
                     <div class="input-box">
                         <label>Valor de Custo (R$):</label>
                         <input type="number" id="novo-custo" placeholder="Ex: 50.00" step="0.01">
+                        <small>💡 O quanto você investiu neste produto</small>
                     </div>
                     <div class="input-box">
                         <label>Preço de Venda (R$):</label>
@@ -246,16 +332,22 @@
                     </div>
                 </div>
 
+                <!-- ABA 3: RELATÓRIO DE VENDAS -->
                 <div id="aba-relatorio" class="admin-tab-content">
                     <h3>📊 Relatório de Vendas</h3>
-                    <div class="alert alert-info">📈 Histórico de vendas com cálculo automático de lucro</div>
+                    <div class="alert alert-info">
+                        📈 Histórico de vendas com cálculo automático de lucro
+                    </div>
                     <div id="relatorioVendas"></div>
                     <button class="btn-danger" onclick="limparVendas()" style="width: 100%; margin-top: 15px;">🗑️ Limpar Histórico</button>
                 </div>
 
+                <!-- ABA 4: CONFIGURAÇÕES -->
                 <div id="aba-config" class="admin-tab-content">
                     <h3>⚙️ Configurações Gerais</h3>
-                    <div class="alert alert-warning">⚠️ <strong>Alterações sincronizadas em tempo real</strong> para todos os dispositivos!</div>
+                    <div class="alert alert-warning">
+                        ⚠️ <strong>Alterações sincronizadas em tempo real</strong> para todos os dispositivos!
+                    </div>
                     <div class="input-box">
                         <label>📞 Número WhatsApp:</label>
                         <input type="text" id="config-whatsapp" placeholder="5562995175110" onchange="salvarConfig()">
@@ -267,6 +359,7 @@
                     <div class="input-box">
                         <label>📦 Estoque Mínimo para Avisar:</label>
                         <input type="number" id="config-estoque-min" placeholder="5" value="5" onchange="salvarConfig()">
+                        <small>💡 Recebe notificação quando produto chegar neste nível</small>
                     </div>
                     <div class="alert alert-success" style="margin-top: 20px;">✅ As configurações são salvas automaticamente!</div>
                 </div>
@@ -274,13 +367,14 @@
         </div>
     </div>
 
-    <div class="sync-status" id="syncStatus">✅ Sincronizado</div>
+    <div class="sync-status" id="syncStatus">✅ Sincronizado com Supabase</div>
 
     <script>
-        const SUPABASE_URL = 'https://ofpynowzozttwajsbcda.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_MvJlA5pmXxP_vU670Q_3aw_t-gmtIkd';
+        // ==================== CONFIGURAÇÕES SUPABASE ====================
+        const SUPABASE_URL = 'https://siifboaoeybqmmzuwmjy.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaWZib2FvZXlicW1tem53bWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NjMxOTQsImV4cCI6MjA1NjMzOTE5NH0.gGVbLuDYZLfXj-_B9YeLNjA4mfEQIl6zMPm_PFeaxs4';
         const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+        const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const ADMIN_PASSWORD = "369852Isa@";
         const SECRET_CODE = "admeletrozoom";
@@ -288,9 +382,11 @@
         let carrinho = [];
         let produtos = [];
         let vendas = [];
+        let config = { whatsapp: "5562995175110", frete: 25.00, estoque_min: 5 };
         let codigoAtual = "";
-        let config = { whatsapp: '5562995175110', frete: 25.00, estoque_min: 5 };
+        let carregandoProdutos = false;
 
+        // ==================== CAPTURADOR DE CÓDIGO SECRETO ====================
         document.addEventListener('keydown', (e) => {
             if(e.key.match(/^[a-zA-Z0-9]$/)) {
                 codigoAtual += e.key;
@@ -306,79 +402,58 @@
             }
         });
 
+        // ==================== INICIALIZAÇÃO ====================
+        async function inicializar() {
+            console.log('🚀 Iniciando aplicação...');
+            await carregarConfigurações();
+            await carregarProdutos();
+            await carregarVendas();
+            escutarMudancasProdutos();
+        }
+
+        // ==================== CARREGAR PRODUTOS DO SUPABASE ====================
         async function carregarProdutos() {
+            if(carregandoProdutos) return;
+            carregandoProdutos = true;
+            
             try {
                 console.log('📡 Carregando produtos do Supabase...');
-                const { data, error } = await supabaseClient.from('produtos').select('*');
+                const { data, error } = await sb.from('produtos').select('*').order('id');
                 
-                if(error) {
-                    console.error('Erro ao carregar:', error);
-                    produtos = JSON.parse(localStorage.getItem('produtos_backup')) || [];
-                    if(produtos.length === 0) {
-                        await inicializarProdutosDefault();
-                    }
-                } else if(data && data.length > 0) {
+                if(error) throw error;
+                
+                if(data && data.length > 0) {
                     produtos = data;
-                    console.log('✅ Produtos carregados:', produtos.length);
+                    console.log(`✅ ${produtos.length} produtos carregados`);
                 } else {
-                    await inicializarProdutosDefault();
+                    console.log('ℹ️ Nenhum produto encontrado, criando padrão...');
+                    await criarProdutosDefault();
                 }
                 
                 render(produtos);
-                
-                supabaseClient
-                    .channel('produtos-changes')
-                    .on('postgres_changes', { 
-                        event: '*', 
-                        schema: 'public', 
-                        table: 'produtos' 
-                    }, payload => {
-                        console.log('📡 Mudança detectada!', payload);
-                        carregarProdutos();
-                    })
-                    .subscribe();
-                    
             } catch(err) {
-                console.error('Erro:', err);
-                await inicializarProdutosDefault();
+                console.error('❌ Erro ao carregar:', err.message);
+            } finally {
+                carregandoProdutos = false;
             }
         }
 
-        async function carregarConfigurações() {
-            try {
-                const { data, error } = await supabaseClient.from('configuracoes').select('*').eq('id', 1).single();
-                
-                if(data) {
-                    config = data;
-                    document.getElementById('config-whatsapp').value = config.whatsapp || '5562995175110';
-                    document.getElementById('config-frete').value = config.frete || 25.00;
-                    document.getElementById('config-estoque-min').value = config.estoque_min || 5;
-                } else {
-                    await supabaseClient.from('configuracoes').insert([{
-                        id: 1,
-                        whatsapp: '5562995175110',
-                        frete: 25.00,
-                        estoque_min: 5
-                    }]);
-                }
-            } catch(err) {
-                console.error('Erro ao carregar config:', err);
-            }
+        // ==================== ESCUTAR MUDANÇAS EM TEMPO REAL ====================
+        function escutarMudancasProdutos() {
+            sb.channel('produtos-channel')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'produtos'
+                }, (payload) => {
+                    console.log('📡 Mudança detectada:', payload.eventType);
+                    carregarProdutos();
+                })
+                .subscribe();
         }
 
-        async function carregarVendas() {
-            try {
-                const { data, error } = await supabaseClient.from('vendas').select('*').order('created_at', { ascending: false });
-                if(data) {
-                    vendas = data;
-                    console.log('✅ Vendas carregadas:', vendas.length);
-                }
-            } catch(err) {
-                console.error('Erro ao carregar vendas:', err);
-            }
-        }
-
-        async function inicializarProdutosDefault() {
+        // ==================== CRIAR PRODUTOS DEFAULT ====================
+        async function criarProdutosDefault() {
             const produtosDefault = [
                 { id: 101, nome: "Caixa de Som Basike Ba-RAD 044 50W", custo: 300.00, preco_atual: 570.00, estoque: 10, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Portatil_Bluetooth_Com_Radio_Fm_Subwoofer_Ativo_Boombox_Estereo_Hifi_Tws_1_1_Bluetooth_5.3_Bateria_8_Horas_Ipx5_50w_Com_Rgb_Powerbank_para_iPhone_E_Samsung_Cor_Preto.jpg?v=1753149464&width=700", ficha: "50W RMS | Bass Boost | Bateria 8h", cores: ["Preto", "Branco", "Cinza"] },
                 { id: 102, nome: "Caixa de Som Basike Ba RAD 021 15W", custo: 180.00, preco_atual: 349.90, estoque: 8, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomPortatilBluetoothSubwooferTwsIpx5ComRgb_4.jpg?v=1753149227&width=700", ficha: "15W RMS | IPX5 | TWS 1+1", cores: ["Preto", "Vermelho"] },
@@ -391,21 +466,71 @@
                 { id: 109, nome: "Caixa de Som Basike Ba RAD 033 60W", custo: 340.00, preco_atual: 600.00, estoque: 12, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Bluetooth_Portatil_Subwoofer_Tws_1_1_Ipx6_Rgb_4.jpg?v=1754067754&width=700", ficha: "60W | Subwoofer Ativo | TWS", cores: ["Preto", "Azul"] },
                 { id: 110, nome: "Caixa de Som Basike Ba RAR 134 300W", custo: 1500.00, preco_atual: 2400.00, estoque: 2, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2026-02-24T084907.015.jpg?v=1771933842&width=700", ficha: "300W | IPX6 | Bateria 30.000mAh", cores: ["Preto"] },
                 { id: 111, nome: "Caixa de Som Basike Ba RAD 253 100W", custo: 600.00, preco_atual: 999.00, estoque: 5, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome.jpg?v=1755717877&width=700", ficha: "100W | Compacta | Bluetooth 5.3", cores: ["Preto", "Ouro"] },
+                { id: 112, nome: "Caixa de Som Basike Ba RAD 252 400W", custo: 1800.00, preco_atual: 3200.00, estoque: 1, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomBluetooth400w48000mahTwsIpx6BoomboxFesta_2.jpg?v=1756309673&width=700", ficha: "400W | Bateria 48.000mAh | Ultra Bass", cores: ["Preto"] },
+                { id: 113, nome: "Caixa de Som Basike Ba-RAD 251 200W", custo: 1400.00, preco_atual: 2500.00, estoque: 3, img: "https://basikebrasil.com.br/cdn/shop/files/1.jpg?v=1756402568&width=700", ficha: "200W RMS | IPX6 | Bluetooth 5.4", cores: ["Preto", "Prata"] },
+                { id: 114, nome: "Caixa de Som Basike Ba RAD 293 100W", custo: 450.00, preco_atual: 799.90, estoque: 6, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Bluetooth_100w_10000mah_Tws_Ipx6_Boombox_Festa_2.jpg?v=1768412094&width=700", ficha: "100W | Bateria 10.000mAh | Boombox", cores: ["Preto", "Azul", "Vermelho"] },
+                { id: 115, nome: "Caixa de Som Basike Ba RAD 294 100W", custo: 400.00, preco_atual: 700.00, estoque: 8, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_19.jpg?v=1756756124&width=700", ficha: "100W | Subwoofer | 8h Bateria", cores: ["Preto"] },
+                { id: 116, nome: "Caixa de Som Basike Ba RAD 132 40W", custo: 400.00, preco_atual: 700.00, estoque: 4, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_de_Som_Basike_Ba-RAD132_Bluetooth_IPX7_Estereo_TWS_80W_RGB_10h_Autonomia_8000mAh_Power_Bank_A_Prova_D_Agua_Grave_Profundo_Luz_Sincronizada_para_Praia_Piscina_Outdoor_10.jpg?v=1756863106&width=700", ficha: "40W | IPX7 À Prova D'água | RGB", cores: ["Preto", "Azul", "Verde"] },
+                { id: 117, nome: "Caixa de Som Basike Ba RAD 136 40W", custo: 250.00, preco_atual: 430.00, estoque: 11, img: "https://basikebrasil.com.br/cdn/shop/files/BasikeCaixaDeSomBluetoothEstereoPortatilPartyTws_2.jpg?v=1756864370&width=700", ficha: "40W | Party TWS | Estéreo", cores: ["Preto", "Vermelho"] },
+                { id: 118, nome: "Caixa de Som Basike Ba RAD 289 160W", custo: 500.00, preco_atual: 850.00, estoque: 3, img: "https://basikebrasil.com.br/cdn/shop/files/Prancheta_16.png?v=1757618886&width=700", ficha: "160W | 15h de Música | IPX6", cores: ["Preto"] },
+                { id: 119, nome: "Caixa de Som Basike Ba RAD 066 120W", custo: 600.00, preco_atual: 999.00, estoque: 5, img: "https://basikebrasil.com.br/cdn/shop/files/Designsemnome_29.jpg?v=1757382332&width=700", ficha: "120W | Microfone Incluso | Karaoke", cores: ["Preto", "Prata"] },
+                { id: 120, nome: "Caixa de Som Basike Ba RAD 337 80W", custo: 320.00, preco_atual: 530.00, estoque: 7, img: "https://basikebrasil.com.br/cdn/shop/files/MercadoLivre1200x1200_1.jpg?v=1759347680&width=700", ficha: "80W | Boombox TWS | Som 360°", cores: ["Preto", "Azul", "Vermelho"] },
                 { id: 121, nome: "Fone Basike FON-9856 HiFi", custo: 60.00, preco_atual: 120.00, estoque: 15, img: "https://i.postimg.cc/1z2y4mFj/Whats-App-Image-2026-03-04-at-16-09-53.jpg", ficha: "Bluetooth 5.3 | Áudio HiFi | Bateria 5h", cores: ["Preto", "Branco"] },
                 { id: 122, nome: "Fone Basike FON-239 Esportivo", custo: 100.00, preco_atual: 185.00, estoque: 12, img: "https://i.postimg.cc/wM352kMq/Whats-App-Image-2026-03-04-at-16-15-53.jpg", ficha: "Bluetooth 5.4 | Bateria 60h | IPX5", cores: ["Preto", "Azul", "Vermelho", "Verde"] },
-                { id: 123, nome: "Fone Basike FON-6697 Tela Touch", custo: 150.00, preco_atual: 249.00, estoque: 8, img: "https://i.postimg.cc/5jdHz5CV/Whats-App-Image-2026-03-04-at-16-17-56.jpg", ficha: "Estojo com Tela LCD Touch | Bluetooth 5.4 | Som HD", cores: ["Preto", "Branco"] }
+                { id: 123, nome: "Fone Basike FON-6697 Tela Touch", custo: 150.00, preco_atual: 249.00, estoque: 8, img: "https://i.postimg.cc/5jdHz5CV/Whats-App-Image-2026-03-04-at-16-17-56.jpg", ficha: "Estojo com Tela LCD Touch | Bluetooth 5.4 | Som HD", cores: ["Preto", "Branco"] },
+                { id: 124, nome: "Fone Basike FON-142 Pro Corrida", custo: 90.00, preco_atual: 168.00, estoque: 10, img: "https://i.postimg.cc/6Q3dt0Vb/Whats-App-Image-2026-03-04-at-16-19-26.jpg", ficha: "Bluetooth 5.4 | Bateria 45h | Display Digital", cores: ["Preto", "Azul"] },
+                { id: 125, nome: "Fone Basike FON-249 Sport 3D", custo: 110.00, preco_atual: 195.00, estoque: 9, img: "https://i.postimg.cc/HxM8kPr9/Whats-App-Image-2026-03-04-at-16-20-40-1.jpg", ficha: "Som HIFI 3D | Drivers 12mm | IPX6", cores: ["Preto", "Vermelho", "Azul"] },
+                { id: 126, nome: "Fone Basike FON-231 ANC Esportivo", custo: 130.00, preco_atual: 210.00, estoque: 6, img: "https://i.postimg.cc/g0XngBHW/Whats-App-Image-2026-03-04-at-16-21-24.jpg", ficha: "Bluetooth 5.4 | Cancelamento ANC | Hi-Fi", cores: ["Preto", "Branco", "Azul"] }
             ];
 
             try {
-                await supabaseClient.from('produtos').insert(produtosDefault);
+                const { error } = await sb.from('produtos').insert(produtosDefault);
+                if(error) throw error;
                 produtos = produtosDefault;
-                console.log('✅ Produtos padrão inseridos!');
-                localStorage.setItem('produtos_backup', JSON.stringify(produtosDefault));
+                console.log('✅ Produtos padrão criados!');
             } catch(err) {
-                console.error('Erro ao inserir:', err);
+                console.error('❌ Erro ao criar produtos:', err.message);
             }
         }
 
+        // ==================== CARREGAR CONFIGURAÇÕES ====================
+        async function carregarConfigurações() {
+            try {
+                const { data, error } = await sb.from('configuracoes').select('*').eq('id', 1).single();
+                
+                if(data) {
+                    config = data;
+                    console.log('✅ Configurações carregadas');
+                } else {
+                    await sb.from('configuracoes').insert([{
+                        id: 1,
+                        whatsapp: "5562995175110",
+                        frete: 25.00,
+                        estoque_min: 5
+                    }]);
+                }
+                
+                if(document.getElementById('config-whatsapp')) {
+                    document.getElementById('config-whatsapp').value = config.whatsapp;
+                    document.getElementById('config-frete').value = config.frete;
+                    document.getElementById('config-estoque-min').value = config.estoque_min;
+                }
+            } catch(err) {
+                console.error('❌ Erro ao carregar config:', err.message);
+            }
+        }
+
+        // ==================== CARREGAR VENDAS ====================
+        async function carregarVendas() {
+            try {
+                const { data, error } = await sb.from('vendas').select('*').order('created_at', { ascending: false });
+                if(data) vendas = data;
+            } catch(err) {
+                console.error('❌ Erro ao carregar vendas:', err.message);
+            }
+        }
+
+        // ==================== FUNÇÕES UTILITÁRIAS ====================
         function tratarPreco(preco) {
             if (!preco) return 0;
             let p = String(preco).replace('R$', '').replace(/\s/g, '').replace(',', '.');
@@ -423,10 +548,10 @@
             const vitrine = document.getElementById('vitrine');
             vitrine.innerHTML = lista.map(p => {
                 const temEstoque = p.estoque > 0;
-                const estoqueClass = p.estoque <= (config.estoque_min || 5) ? 'baixo' : '';
+                const estoqueClass = p.estoque <= config.estoque_min ? 'baixo' : '';
                 return `
                     <div class="card">
-                        <img src="${p.img}" alt="${p.nome}">
+                        <img src="${p.img}" onerror="this.src='https://via.placeholder.com/140?text=Imagem+Indisponível'">
                         <h3>${p.nome}</h3>
                         <div class="preco">R$ ${tratarPreco(p.preco_atual).toFixed(2).replace('.', ',')}</div>
                         <div class="estoque ${estoqueClass}">
@@ -479,7 +604,7 @@
             let sub = 0;
             carrinho.forEach(i => sub += tratarPreco(i.preco_atual));
             document.getElementById('val-subtotal-vitrine').innerText = sub.toFixed(2).replace('.', ',');
-            const total = sub > 0 ? sub + (config.frete || 25) : 0;
+            const total = sub > 0 ? sub + config.frete : 0;
             document.getElementById('total-display').innerText = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
         }
 
@@ -500,37 +625,39 @@
                 subtotal += p;
                 produtosTexto += `✅ *${i.nome}*%0AR$ ${p.toFixed(2).replace('.', ',')}%0A%0A`;
             });
-            const totalFinal = subtotal + (config.frete || 25);
+            const totalFinal = subtotal + config.frete;
             
-            const msg = `*🛍️ NOVO PEDIDO - ELETROZOOM*%0A%0A*👤 CLIENTE:* ${nome}%0A*📧 EMAIL:* ${email}%0A*📱 WHATSAPP:* ${zap}%0A*📍 ENDEREÇO:* ${document.getElementById('f-rua').value}%0A*🏠 QD/LT:* ${document.getElementById('f-quadra').value}/${document.getElementById('f-lote').value}%0A*🏙️ BAIRRO:* ${document.getElementById('f-bairro').value}%0A%0A*🛒 ITENS:*%0A${produtosTexto}*SUBTOTAL:* R$ ${subtotal.toFixed(2).replace('.', ',')}%0A*FRETE:* R$ ${(config.frete || 25).toFixed(2).replace('.', ',')}%0A*💰 TOTAL: R$ ${totalFinal.toFixed(2).replace('.', ',')}*`;
+            const msg = `*🛍️ NOVO PEDIDO - ELETROZOOM*%0A%0A*👤 CLIENTE:* ${nome}%0A*📧 EMAIL:* ${email}%0A*📱 WHATSAPP:* ${zap}%0A*📍 ENDEREÇO:* ${document.getElementById('f-rua').value}%0A*🏠 QD/LT:* ${document.getElementById('f-quadra').value}/${document.getElementById('f-lote').value}%0A*🏙️ BAIRRO:* ${document.getElementById('f-bairro').value}%0A%0A*🛒 ITENS:*%0A${produtosTexto}*SUBTOTAL:* R$ ${subtotal.toFixed(2).replace('.', ',')}%0A*FRETE:* R$ ${config.frete.toFixed(2).replace('.', ',')}%0A*💰 TOTAL: R$ ${totalFinal.toFixed(2).replace('.', ',')}*`;
             
-            window.open(`https://wa.me/${config.whatsapp || '5562995175110'}?text=${msg}`);
+            window.open(`https://wa.me/${config.whatsapp}?text=${msg}`);
             
+            // Registrar venda
             const venda = {
-                data: new Date().toLocaleString('pt-BR'),
                 cliente: nome,
-                itens: carrinho,
+                itens: JSON.stringify(carrinho),
                 subtotal: subtotal,
-                frete: config.frete || 25,
+                frete: config.frete,
                 total: totalFinal,
-                custo_total: carrinho.reduce((acc, item) => acc + (item.custo || 0), 0)
+                custo_total: carrinho.reduce((acc, item) => acc + (item.custo || 0), 0),
+                email: email,
+                whatsapp: zap
             };
 
             try {
-                await supabaseClient.from('vendas').insert([venda]);
-                console.log('✅ Venda registrada!');
+                await sb.from('vendas').insert([venda]);
+                console.log('✅ Venda registrada');
             } catch(err) {
-                console.error('Erro ao registrar venda:', err);
+                console.error('❌ Erro ao registrar venda:', err.message);
             }
 
+            // Atualizar estoque
             for(let item of carrinho) {
                 const prod = produtos.find(p => p.id === item.id);
                 if(prod) {
-                    prod.estoque--;
                     try {
-                        await supabaseClient.from('produtos').update({ estoque: prod.estoque }).eq('id', prod.id);
+                        await sb.from('produtos').update({ estoque: prod.estoque - 1 }).eq('id', prod.id);
                     } catch(err) {
-                        console.error('Erro ao atualizar:', err);
+                        console.error('❌ Erro ao atualizar estoque:', err.message);
                     }
                 }
             }
@@ -540,6 +667,13 @@
             nav('p-vitrine');
         }
 
+        function mostrarSync() {
+            const syncEl = document.getElementById('syncStatus');
+            syncEl.style.display = 'block';
+            setTimeout(() => syncEl.style.display = 'none', 2000);
+        }
+
+        // ==================== FUNÇÕES ADMIN ====================
         function abrirAdmin() {
             document.getElementById('adminModal').style.display = 'block';
             document.getElementById('loginAdmin').style.display = 'block';
@@ -561,10 +695,10 @@
                 document.getElementById('adminContent').style.display = 'block';
                 preencherTabelaAdmin();
                 carregarConfigurações();
+                gerarRelatorio();
             } else {
                 alert("❌ Senha incorreta!");
                 document.getElementById('adminSenha').value = '';
-                document.getElementById('adminSenha').focus();
             }
         }
 
@@ -573,11 +707,16 @@
             document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('aba-' + aba).classList.add('active');
+            
+            if(aba === 'relatorio') {
+                gerarRelatorio();
+            }
         }
 
         function preencherTabelaAdmin() {
             const tbody = document.getElementById('adminTableBody');
             tbody.innerHTML = produtos.map(p => {
+                const avisoEstoque = p.estoque <= config.estoque_min ? '⚠️' : '';
                 const coresHTML = p.cores && p.cores.length > 0 ? p.cores.map((cor, idx) => `
                     <div class="cor-badge">
                         ${cor}
@@ -591,7 +730,7 @@
                         <td><input type="text" value="${p.nome}" onchange="atualizarProdutoAdmin(${p.id}, 'nome', this.value)"></td>
                         <td><input type="number" value="${p.custo || 0}" step="0.01" onchange="atualizarProdutoAdmin(${p.id}, 'custo', this.value)"></td>
                         <td><input type="number" value="${p.preco_atual}" step="0.01" onchange="atualizarProdutoAdmin(${p.id}, 'preco_atual', this.value)"></td>
-                        <td><input type="number" value="${p.estoque}" onchange="atualizarProdutoAdmin(${p.id}, 'estoque', this.value)"></td>
+                        <td><input type="number" value="${p.estoque}" onchange="atualizarProdutoAdmin(${p.id}, 'estoque', this.value)"> ${avisoEstoque}</td>
                         <td>
                             <div class="cores-container">${coresHTML}</div>
                             <div class="cores-input-group">
@@ -606,119 +745,182 @@
         }
 
         async function atualizarProdutoAdmin(id, campo, valor) {
-            const prod = produtos.find(p => p.id === id);
-            if(prod) {
+            try {
+                const updateObj = {};
                 if(campo === 'preco_atual' || campo === 'custo' || campo === 'estoque') {
-                    prod[campo] = parseFloat(valor);
+                    updateObj[campo] = parseFloat(valor);
                 } else {
-                    prod[campo] = valor;
+                    updateObj[campo] = valor;
                 }
-
-                try {
-                    await supabaseClient.from('produtos').update({ [campo]: campo === 'preco_atual' || campo === 'custo' || campo === 'estoque' ? parseFloat(valor) : valor }).eq('id', id);
-                    render(produtos);
-                } catch(err) {
-                    console.error('Erro:', err);
-                }
+                
+                const { error } = await sb.from('produtos').update(updateObj).eq('id', id);
+                if(error) throw error;
+                mostrarSync();
+            } catch(err) {
+                console.error('❌ Erro:', err.message);
             }
         }
 
-        async function removerProdutoAdmin(id) {
-            if(confirm('Tem certeza?')) {
-                try {
-                    await supabaseClient.from('produtos').delete().eq('id', id);
-                    produtos = produtos.filter(p => p.id !== id);
-                    preencherTabelaAdmin();
-                    render(produtos);
-                } catch(err) {
-                    console.error('Erro:', err);
+        function removerCor(produtoId, indice) {
+            const prod = produtos.find(p => p.id === produtoId);
+            if(prod && prod.cores) {
+                prod.cores.splice(indice, 1);
+                sb.from('produtos').update({ cores: prod.cores }).eq('id', produtoId);
+                preencherTabelaAdmin();
+            }
+        }
+
+        function adicionarCorProduto(produtoId) {
+            const inputEl = document.getElementById(`nova-cor-${produtoId}`);
+            const corNova = inputEl.value.trim();
+            if(corNova) {
+                const prod = produtos.find(p => p.id === produtoId);
+                if(prod) {
+                    if(!prod.cores) prod.cores = [];
+                    if(!prod.cores.includes(corNova)) {
+                        prod.cores.push(corNova);
+                        inputEl.value = '';
+                        sb.from('produtos').update({ cores: prod.cores }).eq('id', produtoId);
+                        preencherTabelaAdmin();
+                    } else {
+                        alert("Esta cor já existe!");
+                    }
                 }
             }
         }
 
         async function adicionarNovoProduto() {
-            const novo = {
-                id: parseInt(document.getElementById('novo-id').value),
-                nome: document.getElementById('novo-nome').value,
-                custo: parseFloat(document.getElementById('novo-custo').value),
-                preco_atual: parseFloat(document.getElementById('novo-preco').value),
-                estoque: parseInt(document.getElementById('novo-estoque').value),
-                img: document.getElementById('novo-img').value,
-                ficha: document.getElementById('novo-ficha').value,
-                cores: document.getElementById('novo-cores').value.split(',').map(c => c.trim())
-            };
+            const id = parseInt(document.getElementById('novo-id').value);
+            const nome = document.getElementById('novo-nome').value;
+            const custo = parseFloat(document.getElementById('novo-custo').value);
+            const preco = parseFloat(document.getElementById('novo-preco').value);
+            const estoque = parseInt(document.getElementById('novo-estoque').value) || 10;
+            const img = document.getElementById('novo-img').value;
+            const ficha = document.getElementById('novo-ficha').value;
+            const cores = document.getElementById('novo-cores').value.split(',').map(c => c.trim()).filter(c => c);
+
+            if(!id || !nome || !custo || !preco || !img) {
+                alert("Preencha todos os campos obrigatórios!");
+                return;
+            }
+
+            if(produtos.find(p => p.id === id)) {
+                alert("ID já existe!");
+                return;
+            }
 
             try {
-                await supabaseClient.from('produtos').insert([novo]);
-                produtos.push(novo);
-                preencherTabelaAdmin();
-                render(produtos);
-                alert('✅ Produto adicionado!');
-                document.querySelectorAll('#aba-adicionar input, #aba-adicionar textarea').forEach(el => el.value = '');
+                const { error } = await sb.from('produtos').insert([{ id, nome, custo, preco_atual: preco, estoque, img, ficha, cores }]);
+                if(error) throw error;
+                alert("✅ Produto adicionado!");
+                
+                document.getElementById('novo-id').value = '';
+                document.getElementById('novo-nome').value = '';
+                document.getElementById('novo-custo').value = '';
+                document.getElementById('novo-preco').value = '';
+                document.getElementById('novo-estoque').value = '10';
+                document.getElementById('novo-img').value = '';
+                document.getElementById('novo-ficha').value = '';
+                document.getElementById('novo-cores').value = '';
             } catch(err) {
-                console.error('Erro:', err);
-                alert('❌ Erro ao adicionar produto');
+                console.error('❌ Erro:', err.message);
+                alert('Erro ao adicionar produto!');
+            }
+        }
+
+        async function removerProdutoAdmin(id) {
+            if(confirm("Tem certeza?")) {
+                try {
+                    const { error } = await sb.from('produtos').delete().eq('id', id);
+                    if(error) throw error;
+                } catch(err) {
+                    console.error('❌ Erro:', err.message);
+                }
+            }
+        }
+
+        function gerarRelatorio() {
+            const container = document.getElementById('relatorioVendas');
+            
+            if(vendas.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">📭 Nenhuma venda registrada</div>';
+                return;
+            }
+
+            let totalLucro = 0, totalReceita = 0, totalCusto = 0;
+
+            const html = vendas.map((venda, idx) => {
+                const lucro = venda.total - venda.custo_total - venda.frete;
+                totalLucro += lucro;
+                totalReceita += venda.total;
+                totalCusto += venda.custo_total;
+
+                return `
+                    <div class="relatorio-card">
+                        <strong>#${idx + 1}</strong>
+                        <div class="relatorio-item"><span>Cliente:</span><span>${venda.cliente}</span></div>
+                        <div class="relatorio-item"><span>Subtotal:</span><span>R$ ${venda.subtotal.toFixed(2).replace('.', ',')}</span></div>
+                        <div class="relatorio-item"><span>Frete:</span><span>R$ ${venda.frete.toFixed(2).replace('.', ',')}</span></div>
+                        <div class="relatorio-item"><span>Total:</span><span>R$ ${venda.total.toFixed(2).replace('.', ',')}</span></div>
+                        <div class="relatorio-item"><span>💰 Lucro:</span><span class="${lucro >= 0 ? 'relatorio-lucro' : 'relatorio-prejuizo'}">${lucro >= 0 ? '+' : ''}R$ ${lucro.toFixed(2).replace('.', ',')}</span></div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html + `
+                <div class="relatorio-total">
+                    <div>💵 Custo: R$ ${totalCusto.toFixed(2).replace('.', ',')}</div>
+                    <div>💰 Receita: R$ ${totalReceita.toFixed(2).replace('.', ',')}</div>
+                    <div style="font-size: 1.4rem;">📊 LUCRO: R$ ${totalLucro.toFixed(2).replace('.', ',')}</div>
+                </div>
+            `;
+        }
+
+        async function limparVendas() {
+            if(confirm("⚠️ Tem certeza?")) {
+                try {
+                    const { error } = await sb.from('vendas').delete().gte('id', 0);
+                    if(error) throw error;
+                    vendas = [];
+                    gerarRelatorio();
+                    alert("✅ Histórico limpo!");
+                } catch(err) {
+                    console.error('❌ Erro:', err.message);
+                }
             }
         }
 
         async function salvarConfig() {
-            config = {
-                whatsapp: document.getElementById('config-whatsapp').value,
-                frete: parseFloat(document.getElementById('config-frete').value),
-                estoque_min: parseInt(document.getElementById('config-estoque-min').value)
-            };
-
             try {
-                await supabaseClient.from('configuracoes').update(config).eq('id', 1);
-                console.log('✅ Config salva!');
+                const { error } = await sb.from('configuracoes').update({
+                    whatsapp: document.getElementById('config-whatsapp').value,
+                    frete: parseFloat(document.getElementById('config-frete').value),
+                    estoque_min: parseInt(document.getElementById('config-estoque-min').value)
+                }).eq('id', 1);
+                
+                if(error) throw error;
+                
+                config = {
+                    whatsapp: document.getElementById('config-whatsapp').value,
+                    frete: parseFloat(document.getElementById('config-frete').value),
+                    estoque_min: parseInt(document.getElementById('config-estoque-min').value)
+                };
+                
+                mostrarSync();
             } catch(err) {
-                console.error('Erro:', err);
+                console.error('❌ Erro:', err.message);
             }
         }
 
-        async function adicionarCorProduto(id) {
-            const input = document.getElementById(`nova-cor-${id}`);
-            const cor = input.value.trim();
-            if(cor) {
-                const prod = produtos.find(p => p.id === id);
-                if(prod) {
-                    if(!prod.cores) prod.cores = [];
-                    prod.cores.push(cor);
-                    await supabaseClient.from('produtos').update({ cores: prod.cores }).eq('id', id);
-                    preencherTabelaAdmin();
-                    input.value = '';
-                }
+        window.onload = inicializar;
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('adminModal');
+            if(event.target === modal) {
+                modal.style.display = 'none';
+                codigoAtual = "";
             }
         }
-
-        async function removerCor(id, idx) {
-            const prod = produtos.find(p => p.id === id);
-            if(prod && prod.cores) {
-                prod.cores.splice(idx, 1);
-                await supabaseClient.from('produtos').update({ cores: prod.cores }).eq('id', id);
-                preencherTabelaAdmin();
-            }
-        }
-
-        async function limparVendas() {
-            if(confirm('Limpar todo histórico de vendas?')) {
-                try {
-                    await supabaseClient.from('vendas').delete().neq('id', 0);
-                    vendas = [];
-                    document.getElementById('relatorioVendas').innerHTML = '';
-                    alert('✅ Histórico limpo!');
-                } catch(err) {
-                    console.error('Erro:', err);
-                }
-            }
-        }
-
-        // Inicializar
-        window.addEventListener('DOMContentLoaded', () => {
-            carregarProdutos();
-            carregarConfigurações();
-            carregarVendas();
-        });
     </script>
 </body>
 </html>
