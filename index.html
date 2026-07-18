@@ -4,486 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eletrozoom Arts & Personalizados</title>
-    <style>
-        :root { --primary: #e31e24; --green: #25d366; --bg: #f4f4f4; --dark: #333; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
-        
-        .page { display: none; padding-bottom: 50px; }
-        .active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        
-        /* Topo */
-        .loja-topo { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-        .busca-box { position: relative; flex-grow: 1; margin: 0 15px; }
-        .busca-box input { width: 100%; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
-        .carrinho-topo { cursor: pointer; font-size: 1.5rem; position: relative; }
-        #contagem-carrinho { background: var(--primary); color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.75rem; position: absolute; top: -5px; right: -10px; }
-
-        /* Banner e Resumo Rápido */
-        .banner-container { text-align: center; padding: 10px; }
-        .resumo-vitrine { background: #fff; margin: 10px; padding: 15px; border-radius: 10px; border-left: 5px solid var(--primary); font-weight: bold; font-size: 1.1rem; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        /* Categorias */
-        .secao-colecoes { padding: 20px 0; background: white; border-bottom: 1px solid #eee; }
-        .colecoes-container { display: flex; overflow-x: auto; gap: 20px; padding: 0 20px; scrollbar-width: none; }
-        .colecao-item { flex: 0 0 auto; text-align: center; cursor: pointer; width: 100px; }
-        .bola { width: 95px; height: 95px; border-radius: 50%; background: white; margin: 0 auto 10px; border: 3px solid #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .bola img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Grid de Produtos */
-        .produtos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; padding: 20px; }
-        .card { background: white; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; }
-        .card img { width: 100%; height: 140px; object-fit: contain; }
-        .card .preco { color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-top: 10px; }
-        .card .estoque { font-size: 0.85rem; color: #666; margin-top: 5px; }
-        .card .estoque.baixo { color: #ff6b6b; font-weight: bold; }
-        .btn-add { flex: 1; background: var(--dark); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-add:hover { background: var(--primary); }
-        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
-
-        /* Formulário */
-        .input-box { margin-bottom: 15px; text-align: left; }
-        .input-box label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
-        .input-box input, .input-box select, .input-box textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
-        .total-banner { background: var(--primary); color: white; padding: 20px; text-align: center; font-size: 1.5rem; font-weight: 800; border-radius: 10px; margin: 20px 0; }
-        .frete-info { color: #2e7d32; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; }
-        
-        /* Botões de Pagamento */
-        .payment-methods { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
-        .btn-payment { flex: 1; min-width: 140px; padding: 15px; border-radius: 8px; border: 2px solid #ddd; cursor: pointer; font-weight: bold; transition: all 0.3s; }
-        .btn-payment:hover { border-color: var(--primary); background: #f0f0f0; }
-        .btn-payment.active { border-color: var(--primary); background: var(--primary); color: white; }
-
-        /* Modal */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto; }
-        .modal-content { background-color: white; margin: 3% auto; padding: 25px; border-radius: 10px; width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close:hover { color: black; }
-
-        /* Abas Admin */
-        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; overflow-x: auto; }
-        .admin-tab { padding: 12px 20px; background: #f0f0f0; cursor: pointer; border: none; border-radius: 5px 5px 0 0; font-weight: bold; white-space: nowrap; }
-        .admin-tab.active { background: var(--primary); color: white; }
-        .admin-tab-content { display: none; }
-        .admin-tab-content.active { display: block; }
-
-        /* Tabela Admin */
-        .admin-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 0.9rem; }
-        .admin-table th { background: #f0f0f0; padding: 12px; text-align: left; font-weight: bold; border-bottom: 2px solid #ddd; }
-        .admin-table td { padding: 12px; border-bottom: 1px solid #ddd; }
-        .admin-table input, .admin-table textarea { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
-        .admin-table button { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
-        .admin-table button:hover { background: #c91a1f; }
-
-        /* Cores */
-        .cores-container { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
-        .cor-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f0f0; padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.9rem; }
-        .cor-badge button { background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem; margin-left: 5px; }
-
-        /* Botões */
-        .btn-group-admin { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; }
-        .btn-primary:hover { background: #c91a1f; }
-        .btn-success { background: var(--green); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; }
-        .btn-success:hover { background: #1fa857; }
-        .btn-danger { background: #ff4444; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-
-        .alert { padding: 12px; margin: 10px 0; border-radius: 5px; }
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-        /* Login Admin */
-        .login-admin-container {
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .login-admin-container h2 {
-            color: var(--primary);
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-        }
-
-        .login-admin-container .lock-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-
-        .login-admin-container input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-
-        .login-admin-container input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .login-admin-container .btn-login {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        .login-admin-container .btn-login:hover {
-            background: #c91a1f;
-        }
-
-        /* Status Sincronização */
-        .sync-status {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            padding: 10px 15px;
-            background: #4CAF50;
-            color: white;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            display: none;
-            z-index: 999;
-        }
-
-        /* Relatório */
-        .relatorio-card { background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid var(--primary); }
-        .relatorio-item { display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.95rem; }
-        .relatorio-lucro { color: var(--green); font-weight: bold; }
-        .relatorio-prejuizo { color: #ff6b6b; font-weight: bold; }
-        .relatorio-total { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; font-size: 1.2rem; font-weight: bold; margin-top: 15px; }
-
-        .input-box small { color: #666; font-size: 0.85rem; }
-
-        /* Input para adicionar cores */
-        .cores-input-group { display: flex; gap: 8px; margin-top: 8px; }
-        .cores-input-group input { flex: 1; padding: 8px; }
-        .cores-input-group button { padding: 8px 15px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-    <!-- PÁGINA VITRINE -->
-    <div id="p-vitrine" class="page active">
-        <header class="loja-topo">
-            <div class="busca-box">
-                <input type="text" placeholder="Pesquisar..." onkeyup="filtrar(this.value)">
-            </div>
-            <div class="carrinho-topo" onclick="nav('p-checkout')">
-                🛒 <span id="contagem-carrinho">0</span>
-            </div>
-        </header>
-
-        <div class="banner-container">
-            <img src="https://i.postimg.cc/Znc6cdYb/Banner-Eletrozoom-(1).jpg" style="width: 100%; border-radius: 10px; max-width: 95%;">
-        </div>
-
-        <div id="resumo-total-vitrine" class="resumo-vitrine">
-            🛒 Subtotal: R$ <span id="val-subtotal-vitrine">0,00</span>
-        </div>
-
-        <section class="secao-colecoes">
-            <div class="colecoes-container">
-                <div class="colecao-item" onclick="filtrar('Caixa')">
-                    <div class="bola"><img src="https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome.png?v=1756999070&width=700"></div>
-                    <span>Caixas</span>
-                </div>
-                <div class="colecao-item" onclick="filtrar('Fone')">
-                    <div class="bola"><img src="https://i.postimg.cc/g0XngBHW/Whats-App-Image-2026-03-04-at-16-21-24.jpg"></div>
-                    <span>Fones</span>
-                </div>
-            </div>
-        </section>
-
-        <div id="vitrine" class="produtos-grid"></div>
-    </div>
-
-    <!-- PÁGINA CHECKOUT -->
-    <div id="p-checkout" class="page">
-        <div class="container">
-            <button onclick="nav('p-vitrine')" style="margin-bottom:20px; border:none; background:#eee; padding:10px; border-radius:8px; cursor:pointer;">← Voltar</button>
-            <h2>Dados de Entrega</h2>
-            
-            <div class="input-box"><label>Nome:</label><input type="text" id="f-nome"></div>
-            <div class="input-box"><label>WhatsApp:</label><input type="tel" id="f-zap"></div>
-            <div class="input-box"><label>Email:</label><input type="email" id="f-email"></div>
-            <div class="input-box">
-                <label>CEP:</label>
-                <input type="text" id="f-cep" maxlength="8" onkeyup="if(this.value.length==8) buscarCep(this.value)">
-            </div>
-            
-            <div id="info-frete" class="frete-info">🚚 Frete: R$ 25,00</div>
-
-            <div class="input-box"><label>Rua/Avenida:</label><input type="text" id="f-rua"></div>
-            <div style="display:flex; gap:10px;">
-                <div class="input-box" style="flex:1"><label>Quadra:</label><input type="text" id="f-quadra"></div>
-                <div class="input-box" style="flex:1"><label>Lote:</label><input type="text" id="f-lote"></div>
-            </div>
-            <div class="input-box"><label>Bairro:</label><input type="text" id="f-bairro"></div>
-            <div class="input-box"><label>Referência:</label><input type="text" id="f-ref"></div>
-
-            <div id="total-display" class="total-banner">Total: R$ 0,00</div>
-
-            <h3>Confirmar Pedido:</h3>
-            <button class="btn-success" onclick="finalizarPedido()" style="width: 100%; font-size: 1.1rem;">💬 Confirmar pelo WhatsApp</button>
-        </div>
-    </div>
-
-    <!-- MODAL ADMIN -->
-    <div id="adminModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span>⚙️ Painel Administrativo</span>
-                <span class="close" onclick="fecharAdmin()">&times;</span>
-            </div>
-            
-            <!-- LOGIN ADMIN -->
-            <div id="loginAdmin" class="login-admin-container">
-                <div class="lock-icon">🔐</div>
-                <h2>Acesso Restrito</h2>
-                <p style="color: #666; margin-bottom: 20px;">Digite sua senha para acessar o painel administrativo</p>
-                <input type="password" id="adminSenha" placeholder="Senha do administrador" onkeypress="if(event.key === 'Enter') autenticarAdmin()">
-                <button class="btn-login" onclick="autenticarAdmin()">🔓 Acessar</button>
-            </div>
-
-            <!-- CONTEÚDO ADMIN -->
-            <div id="adminContent" style="display: none;">
-                <!-- ABAS -->
-                <div class="admin-tabs">
-                    <button class="admin-tab active" onclick="abrirAbaAdmin('editar')">✏️ Produtos</button>
-                    <button class="admin-tab" onclick="abrirAbaAdmin('adicionar')">➕ Novo</button>
-                    <button class="admin-tab" onclick="abrirAbaAdmin('relatorio')">📊 Relatório</button>
-                    <button class="admin-tab" onclick="abrirAbaAdmin('config')">⚙️ Config</button>
-                </div>
-
-                <!-- ABA 1: EDITAR PRODUTOS -->
-                <div id="aba-editar" class="admin-tab-content active">
-                    <h3>📋 Gerenciar Produtos</h3>
-                    <div style="max-height: 600px; overflow-y: auto;">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nome</th>
-                                    <th>Custo</th>
-                                    <th>Preço</th>
-                                    <th>Estoque</th>
-                                    <th>Cores</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ABA 2: ADICIONAR NOVO PRODUTO -->
-                <div id="aba-adicionar" class="admin-tab-content">
-                    <h3>➕ Adicionar Novo Produto</h3>
-                    <div class="input-box">
-                        <label>ID do Produto:</label>
-                        <input type="number" id="novo-id" placeholder="Ex: 127">
-                    </div>
-                    <div class="input-box">
-                        <label>Nome:</label>
-                        <input type="text" id="novo-nome" placeholder="Ex: Caixa de Som XYZ">
-                    </div>
-                    <div class="input-box">
-                        <label>Valor de Custo (R$):</label>
-                        <input type="number" id="novo-custo" placeholder="Ex: 50.00" step="0.01">
-                        <small>💡 O quanto você investiu neste produto</small>
-                    </div>
-                    <div class="input-box">
-                        <label>Preço de Venda (R$):</label>
-                        <input type="number" id="novo-preco" placeholder="Ex: 199.90" step="0.01">
-                    </div>
-                    <div class="input-box">
-                        <label>Quantidade em Estoque:</label>
-                        <input type="number" id="novo-estoque" placeholder="Ex: 10" value="10">
-                    </div>
-                    <div class="input-box">
-                        <label>URL da Imagem:</label>
-                        <input type="url" id="novo-img" placeholder="https://...">
-                    </div>
-                    <div class="input-box">
-                        <label>Ficha Técnica:</label>
-                        <textarea id="novo-ficha" placeholder="Ex: 100W | Bluetooth 5.3 | Bateria 10h" rows="3"></textarea>
-                    </div>
-                    <div class="input-box">
-                        <label>Cores Disponíveis (separadas por vírgula):</label>
-                        <input type="text" id="novo-cores" placeholder="Ex: Preto, Branco, Azul">
-                    </div>
-                    <div class="btn-group-admin">
-                        <button class="btn-success" onclick="adicionarNovoProduto()">✅ Adicionar Produto</button>
-                    </div>
-                </div>
-
-                <!-- ABA 3: RELATÓRIO DE VENDAS -->
-                <div id="aba-relatorio" class="admin-tab-content">
-                    <h3>📊 Relatório de Vendas</h3>
-                    <div class="alert alert-info">
-                        📈 Histórico de vendas com cálculo automático de lucro
-                    </div>
-                    <div id="relatorioVendas"></div>
-                    <button class="btn-danger" onclick="limparVendas()" style="width: 100%; margin-top: 15px;">🗑️ Limpar Histórico</button>
-                </div>
-
-                <!-- ABA 4: CONFIGURAÇÕES -->
-                <div id="aba-config" class="admin-tab-content">
-                    <h3>⚙️ Configurações Gerais</h3>
-                    <div class="alert alert-warning">
-                        ⚠️ <strong>Alterações sincronizadas em tempo real</strong> para todos os dispositivos!
-                    </div>
-                    <div class="input-box">
-                        <label>📞 Número WhatsApp:</label>
-                        <input type="text" id="config-whatsapp" placeholder="5562995175110" onchange="salvarConfig()">
-                    </div>
-                    <div class="input-box">
-                        <label>🚚 Valor do Frete (R$):</label>
-                        <input type="number" id="config-frete" placeholder="25.00" step="0.01" onchange="salvarConfig()">
-                    </div>
-                    <div class="input-box">
-                        <label>📦 Estoque Mínimo para Avisar:</label>
-                        <input type="number" id="config-estoque-min" placeholder="5" value="5" onchange="salvarConfig()">
-                        <small>💡 Recebe notificação quando produto chegar neste nível</small>
-                    </div>
-                    <div class="alert alert-success" style="margin-top: 20px;">✅ As configurações são salvas automaticamente!</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Input invisível para capturar código secreto -->
-    <input type="text" id="secretCodeInput" class="secret-code-input" placeholder="" style="position: fixed; left: -9999px; opacity: 0;">
-
-    <div class="sync-status" id="syncStatus">✅ Sincronizado</div>
-
-    <script>
-        // ==================== CONFIGURAÇÕES ====================
-        const ADMIN_PASSWORD = "369852Isa@";
-        const SECRET_CODE = "admeletrozoom";
-        const USE_LOCAL_STORAGE = true;
-        const SYNC_INTERVAL = 1000; // Sincroniza a cada 1 segundo (mais rápido)
-
-        let carrinho = [];
-        let metodoSelecionado = null;
-        let produtos = [];
-        let vendas = [];
-        let codigoAtual = "";
-        let ultimoProdutosHash = "";
-
-        // ==================== CAPTURADOR DE CÓDIGO SECRETO ====================
-        document.addEventListener('keydown', (e) => {
-            if(e.key.match(/^[a-zA-Z0-9]$/)) {
-                codigoAtual += e.key;
-                
-                if(codigoAtual.includes(SECRET_CODE)) {
-                    abrirAdmin();
-                    codigoAtual = "";
-                }
-                
-                if(codigoAtual.length > SECRET_CODE.length) {
-                    codigoAtual = codigoAtual.slice(-SECRET_CODE.length);
-                }
-            } else {
-                codigoAtual = "";
-            }
-        });
-
-        // ==================== SINCRONIZAÇÃO EM TEMPO REAL ====================
-        function verificarSincronizacao() {
-            const produtosLocal = localStorage.getItem('produtos');
-            if(produtosLocal) {
-                const novoHash = JSON.stringify(JSON.parse(produtosLocal)).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
-                if(novoHash !== ultimoProdutosHash) {
-                    ultimoProdutosHash = novoHash;
-                    produtos = JSON.parse(produtosLocal);
-                    render(produtos);
-                    console.log('✅ Produtos sincronizados!', new Date().toLocaleTimeString());
-                }
-            }
-        }
-
-        setInterval(verificarSincronizacao, SYNC_INTERVAL);
-
-        // Também sincronizar quando a página ganha foco
-        window.addEventListener('focus', verificarSincronizacao);
-
-        // Escuta eventos de storage (quando outra aba muda)
-        window.addEventListener('storage', (e) => {
-            if(e.key === 'produtos') {
-                console.log('📡 Recebeu atualização de outro dispositivo!');
-                verificarSincronizacao();
-            }
-        });
-
-        // ==================== CARREGAR PRODUTOS ====================
-        function carregarProdutos() {
-            const salvos = localStorage.getItem('produtos');
-            if(salvos) {
-                produtos = JSON.parse(salvos);
-                ultimoProdutosHash = JSON.stringify(produtos).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
-            } else {
-                produtos = [
-                // --- CAIXAS DE SOM (101 ao 120) ---
-                { id: 101, nome: "Caixa de Som Basike Ba-RAD 044 50W", custo: 300.00, preco_atual: 570.00, estoque: 10, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Portatil_Bluetooth_Com_Radio_Fm_Subwoofer_Ativo_Boombox_Estereo_Hifi_Tws_1_1_Bluetooth_5.3_Bateria_8_Horas_Ipx5_50w_Com_Rgb_Powerbank_para_iPhone_E_Samsung_Cor_Preto.jpg?v=1753149464&width=700", ficha: "50W RMS | Bass Boost | Bateria 8h", cores: ["Preto", "Branco", "Cinza"] },
-                { id: 102, nome: "Caixa de Som Basike Ba RAD 021 15W", custo: 180.00, preco_atual: 349.90, estoque: 8, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomPortatilBluetoothSubwooferTwsIpx5ComRgb_4.jpg?v=1753149227&width=700", ficha: "15W RMS | IPX5 | TWS 1+1", cores: ["Preto", "Vermelho"] },
-                { id: 103, nome: "Caixa de Som Basike Ba RAD 179 100W", custo: 550.00, preco_atual: 999.90, estoque: 5, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome.png?v=1756999070&width=700", ficha: "100W | IPX6 | RGB Dinâmico", cores: ["Preto", "Azul", "Verde"] },
-                { id: 104, nome: "Caixa de Som Basike Ba RAD 180 200W", custo: 850.00, preco_atual: 1399.00, estoque: 3, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomBluetooth200wBasike13.5PolPotenteBassBoostEstereo_8.jpg?v=1753147045&width=700", ficha: "200W RMS | HiFi Audio | Bass Boost", cores: ["Preto"] },
-                { id: 105, nome: "Caixa de Som Basike Ba RAD 172 80W", custo: 380.00, preco_atual: 685.00, estoque: 7, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2025-07-21T221102.477.jpg?v=1753146850&width=700", ficha: "80W | Ajuste de Graves | BT 5.3", cores: ["Preto", "Prata"] },
-                { id: 106, nome: "Caixa de Som Basike Ba RAD 133 100W", custo: 500.00, preco_atual: 889.90, estoque: 6, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2025-07-21T220507.425.jpg?v=1753146324&width=700", ficha: "100W | Grave Potente | Bateria 10Ah", cores: ["Preto", "Branco"] },
-                { id: 107, nome: "Caixa de Som Basike Ba RAD 015 60W", custo: 520.00, preco_atual: 930.00, estoque: 4, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomPortatilBluetoothSubwooferIpx6TwsComRgb_4.jpg?v=1753145629&width=700", ficha: "60W | IPX6 | Som Surround", cores: ["Preto", "Azul"] },
-                { id: 108, nome: "Caixa de Som Basike Ba RAD 207 80W", custo: 320.00, preco_atual: 570.00, estoque: 9, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2025-07-21T214702.706_952c1d51-200b-46aa-9d27-7300ec755cd2.jpg?v=1761316032&width=700", ficha: "80W | Som 360° | RGB Inteligente", cores: ["Preto", "Vermelho", "Roxo"] },
-                { id: 109, nome: "Caixa de Som Basike Ba RAD 033 60W", custo: 340.00, preco_atual: 600.00, estoque: 12, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Bluetooth_Portatil_Subwoofer_Tws_1_1_Ipx6_Rgb_4.jpg?v=1754067754&width=700", ficha: "60W | Subwoofer Ativo | TWS", cores: ["Preto", "Azul"] },
-                { id: 110, nome: "Caixa de Som Basike Ba RAR 134 300W", custo: 1500.00, preco_atual: 2400.00, estoque: 2, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_-_2026-02-24T084907.015.jpg?v=1771933842&width=700", ficha: "300W | IPX6 | Bateria 30.000mAh", cores: ["Preto"] },
-                { id: 111, nome: "Caixa de Som Basike Ba RAD 253 100W", custo: 600.00, preco_atual: 999.00, estoque: 5, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome.jpg?v=1755717877&width=700", ficha: "100W | Compacta | Bluetooth 5.3", cores: ["Preto", "Ouro"] },
-                { id: 112, nome: "Caixa de Som Basike Ba RAD 252 400W", custo: 1800.00, preco_atual: 3200.00, estoque: 1, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomBluetooth400w48000mahTwsIpx6BoomboxFesta_2.jpg?v=1756309673&width=700", ficha: "400W | Bateria 48.000mAh | Ultra Bass", cores: ["Preto"] },
-                { id: 113, nome: "Caixa de Som Basike Ba-RAD 251 200W", custo: 1400.00, preco_atual: 2500.00, estoque: 3, img: "https://basikebrasil.com.br/cdn/shop/files/1.jpg?v=1756402568&width=700", ficha: "200W RMS | IPX6 | Bluetooth 5.4", cores: ["Preto", "Prata"] },
-                { id: 114, nome: "Caixa de Som Basike Ba RAD 293 100W", custo: 450.00, preco_atual: 799.90, estoque: 6, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Bluetooth_100w_10000mah_Tws_Ipx6_Boombox_Festa_2.jpg?v=1768412094&width=700", ficha: "100W | Bateria 10.000mAh | Boombox", cores: ["Preto", "Azul", "Vermelho"] },
-                { id: 115, nome: "Caixa de Som Basike Ba RAD 294 100W", custo: 400.00, preco_atual: 700.00, estoque: 8, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome_19.jpg?v=1756756124&width=700", ficha: "100W | Subwoofer | 8h Bateria", cores: ["Preto"] },
-                { id: 116, nome: "Caixa de Som Basike Ba RAD 132 40W", custo: 400.00, preco_atual: 700.00, estoque: 4, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_de_Som_Basike_Ba-RAD132_Bluetooth_IPX7_Estereo_TWS_80W_RGB_10h_Autonomia_8000mAh_Power_Bank_A_Prova_D_Agua_Grave_Profundo_Luz_Sincronizada_para_Praia_Piscina_Outdoor_10.jpg?v=1756863106&width=700", ficha: "40W | IPX7 À Prova D'água | RGB", cores: ["Preto", "Azul", "Verde"] },
-                { id: 117, nome: "Caixa de Som Basike Ba RAD 136 40W", custo: 250.00, preco_atual: 430.00, estoque: 11, img: "https://basikebrasil.com.br/cdn/shop/files/BasikeCaixaDeSomBluetoothEstereoPortatilPartyTws_2.jpg?v=1756864370&width=700", ficha: "40W | Party TWS | Estéreo", cores: ["Preto", "Vermelho"] },
-                { id: 118, nome: "Caixa de Som Basike Ba RAD 289 160W", custo: 500.00, preco_atual: 850.00, estoque: 3, img: "https://basikebrasil.com.br/cdn/shop/files/Prancheta_16.png?v=1757618886&width=700", ficha: "160W | 15h de Música | IPX6", cores: ["Preto"] },
-                { id: 119, nome: "Caixa de Som Basike Ba RAD 066 120W", custo: 600.00, preco_atual: 999.00, estoque: 5, img: "https://basikebrasil.com.br/cdn/shop/files/Designsemnome_29.jpg?v=1757382332&width=700", ficha: "120W | Microfone Incluso | Karaoke", cores: ["Preto", "Prata"] },
-                { id: 120, nome: "Caixa de Som Basike Ba RAD 337 80W", custo: 320.00, preco_atual: 530.00, estoque: 7, img: "https://basikebrasil.com.br/cdn/shop/files/MercadoLivre1200x1200_1.jpg?v=1759347680&width=700", ficha: "80W | Boombox TWS | Som 360°", cores: ["Preto", "Azul", "Vermelho"] },
-
-                // --- FONES DE OUVIDO (121 ao 126) ---
-                { id: 121, nome: "Fone Basike FON-9856 HiFi", custo: 60.00, preco_atual: 120.00, estoque: 15, img: "https://i.postimg.cc/1z2y4mFj/Whats-App-Image-2026-03-04-at-16-09-53.jpg", ficha: "Bluetooth 5.3 | Áudio HiFi | Bateria 5h", cores: ["Preto", "Branco"] },
-                { id: 122, nome: "Fone Basike FON-239 Esportivo", custo: 100.00, preco_atual: 185.00, estoque: 12, img: "https://i.postimg.cc/wM352kMq/Whats-App-Image-2026-03-04-at-16-15-53.jpg", ficha: "Bluetooth 5.4 | Bateria 60h | IPX5", cores: ["Preto", "Azul", "Vermelho", "Verde"] },
-                { id: 123, nome: "Fone Basike FON-6697 Tela Touch", custo: 150.00, preco_atual: 249.00, estoque: 8, img: "https://i.postimg.cc/5jdHz5CV/Whats-App-Image-2026-03-04-at-16-17-56.jpg", ficha: "Estojo com Tela LCD Touch | Bluetooth 5.4 | Som HD", cores: ["Preto", "Branco"] },
-                { id: 124, nome: "Fone Basike FON-142 Pro Corrida", custo: 90.00, preco_atual: 168.00, estoque: 10, img: "https://i.postimg.cc/6Q3dt0Vb/Whats-App-Image-2026-03-04-at-16-19-26.jpg", ficha: "Bluetooth 5.4 | Bateria 45h | Display Digital", cores: ["Preto", "Azul"] },
-                { id: 125, nome: "Fone Basike FON-249 Sport 3D", custo: 110.00, preco_atual: 195.00, estoque: 9, img: "https://i.postimg.cc/HxM8kPr9/Whats-App-Image-2026-03-04-at-16-20-40-1.jpg", ficha: "Som HIFI 3D | Drivers 12mm | IPX6", cores: ["Preto", "Vermelho", "Azul"] },
-                { id: 126, nome: "Fone Basike FON-231 ANC Esportivo", custo: 130.00, preco_atual: 210.00, estoque: 6, img: "https://i.postimg.cc/g0XngBHW/Whats-App-Image-2026-03-04-at-16-21-24.jpg", ficha: "Bluetooth 5.4 | Cancelamento ANC | Hi-Fi", cores: ["Preto", "Branco", "Azul"] }
-                ];
-                salvarDados();
-            }
-
-            // Carregar vendas
-            const vendasSalvas = localStorage.getItem('vendas');
-            vendas = vendasSalvas ? JSON.parse(vendasSalvas) : [];
-
-            render(produtos);
-        }
-
-        function tratarPreco(preco) {<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eletrozoom Arts & Personalizados</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #e31e24; --green: #25d366; --bg: #f4f4f4; --dark: #333; }
@@ -895,7 +415,6 @@
                 
                 if(error) {
                     console.error('Erro ao carregar:', error);
-                    // Se não tiver no banco, usa localStorage
                     produtos = JSON.parse(localStorage.getItem('produtos_backup')) || [];
                     if(produtos.length === 0) {
                         await inicializarProdutosDefault();
@@ -904,7 +423,6 @@
                     produtos = data;
                     console.log('✅ Produtos carregados:', produtos.length);
                 } else {
-                    // Primeira vez: inicializar com dados padrão
                     await inicializarProdutosDefault();
                 }
                 
@@ -938,7 +456,6 @@
                     document.getElementById('config-frete').value = config.frete || 25.00;
                     document.getElementById('config-estoque-min').value = config.estoque_min || 5;
                 } else {
-                    // Criar configuração padrão
                     await supabaseClient.from('configuracoes').insert([{
                         id: 1,
                         whatsapp: '5562995175110',
@@ -996,12 +513,21 @@
             ];
 
             try {
-                await supabaseClient.from('produtos').insert(produtosDefault);
-                produtos = produtosDefault;
-                console.log('✅ Produtos padrão inseridos!');
-                localStorage.setItem('produtos_backup', JSON.stringify(produtosDefault));
+                const { data, error } = await supabaseClient.from('produtos').select('*');
+                
+                // Verificar se já existem produtos
+                if(!data || data.length === 0) {
+                    await supabaseClient.from('produtos').insert(produtosDefault);
+                    produtos = produtosDefault;
+                    console.log('✅ Produtos padrão inseridos!');
+                } else {
+                    produtos = data;
+                }
+                
+                localStorage.setItem('produtos_backup', JSON.stringify(produtos));
             } catch(err) {
                 console.error('Erro ao inserir:', err);
+                produtos = produtosDefault;
             }
         }
 
@@ -1105,7 +631,6 @@
             
             window.open(`https://wa.me/${config.whatsapp || '5562995175110'}?text=${msg}`);
             
-            // Registrar venda no Supabase
             const venda = {
                 data: new Date().toLocaleString('pt-BR'),
                 cliente: nome,
@@ -1123,7 +648,6 @@
                 console.error('Erro ao registrar venda:', err);
             }
 
-            // Atualizar estoque
             for(let item of carrinho) {
                 const prod = produtos.find(p => p.id === item.id);
                 if(prod) {
@@ -1405,13 +929,13 @@
                 await supabaseClient.from('configuracoes').update({
                     whatsapp: document.getElementById('config-whatsapp').value,
                     frete: parseFloat(document.getElementById('config-frete').value),
-                    estoque_min: parseInt(document.getElementById('config_estoque-min').value)
+                    estoque_min: parseInt(document.getElementById('config-estoque-min').value)
                 }).eq('id', 1);
                 
                 config = {
                     whatsapp: document.getElementById('config-whatsapp').value,
                     frete: parseFloat(document.getElementById('config-frete').value),
-                    estoque_min: parseInt(document.getElementById('config_estoque-min').value)
+                    estoque_min: parseInt(document.getElementById('config-estoque-min').value)
                 };
                 
                 mostrarSync();
