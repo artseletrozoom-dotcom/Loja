@@ -367,38 +367,33 @@
         </div>
     </div>
 
-    <!-- Input invisível para capturar código secreto -->
-    <input type="text" id="secretCodeInput" class="secret-code-input" placeholder="" style="position: fixed; left: -9999px; opacity: 0;">
-
-    <div class="sync-status" id="syncStatus">✅ Sincronizado com Banco</div>
+    <div class="sync-status" id="syncStatus">✅ Sincronizado com Supabase</div>
 
     <script>
         // ==================== CONFIGURAÇÕES SUPABASE ====================
         const SUPABASE_URL = 'https://ofpynowzozttwajsbcda.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_MvJlA5pmXxP_vU670Q_3aw_t-gmtIkd';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHlub3d6b3p0dHdhanNiY2RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk3NTI2MjAsImV4cCI6MjAyNTMyODYyMH0.Rvg8H8KFj7x-fH-QvgNXxI1vNvL_2L7vXBPvO_bEqnw';
         const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+        const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const ADMIN_PASSWORD = "369852Isa@";
         const SECRET_CODE = "admeletrozoom";
 
         let carrinho = [];
-        let metodoSelecionado = null;
         let produtos = [];
         let vendas = [];
+        let config = { whatsapp: "5562995175110", frete: 25.00, estoque_min: 5 };
         let codigoAtual = "";
-        let config = {};
+        let carregandoProdutos = false;
 
         // ==================== CAPTURADOR DE CÓDIGO SECRETO ====================
         document.addEventListener('keydown', (e) => {
             if(e.key.match(/^[a-zA-Z0-9]$/)) {
                 codigoAtual += e.key;
-                
                 if(codigoAtual.includes(SECRET_CODE)) {
                     abrirAdmin();
                     codigoAtual = "";
                 }
-                
                 if(codigoAtual.length > SECRET_CODE.length) {
                     codigoAtual = codigoAtual.slice(-SECRET_CODE.length);
                 }
@@ -407,82 +402,59 @@
             }
         });
 
-        // ==================== SINCRONIZAÇÃO DO SUPABASE ====================
+        // ==================== INICIALIZAÇÃO ====================
+        async function inicializar() {
+            console.log('🚀 Iniciando aplicação...');
+            await carregarConfigurações();
+            await carregarProdutos();
+            await carregarVendas();
+            escutarMudancasProdutos();
+        }
+
+        // ==================== CARREGAR PRODUTOS DO SUPABASE ====================
         async function carregarProdutos() {
+            if(carregandoProdutos) return;
+            carregandoProdutos = true;
+            
             try {
                 console.log('📡 Carregando produtos do Supabase...');
-                const { data, error } = await supabaseClient.from('produtos').select('*');
+                const { data, error } = await sb.from('produtos').select('*').order('id');
                 
-                if(error) {
-                    console.error('Erro ao carregar:', error);
-                    produtos = JSON.parse(localStorage.getItem('produtos_backup')) || [];
-                    if(produtos.length === 0) {
-                        await inicializarProdutosDefault();
-                    }
-                } else if(data && data.length > 0) {
+                if(error) throw error;
+                
+                if(data && data.length > 0) {
                     produtos = data;
-                    console.log('✅ Produtos carregados:', produtos.length);
+                    console.log(`✅ ${produtos.length} produtos carregados`);
                 } else {
-                    await inicializarProdutosDefault();
+                    console.log('ℹ️ Nenhum produto encontrado, criando padrão...');
+                    await criarProdutosDefault();
                 }
                 
                 render(produtos);
-                
-                // Escutar mudanças em tempo real
-                supabaseClient
-                    .channel('produtos-changes')
-                    .on('postgres_changes', { 
-                        event: '*', 
-                        schema: 'public', 
-                        table: 'produtos' 
-                    }, payload => {
-                        console.log('📡 Mudança detectada!', payload);
-                        carregarProdutos();
-                    })
-                    .subscribe();
-                    
             } catch(err) {
-                console.error('Erro:', err);
+                console.error('❌ Erro ao carregar:', err.message);
+                alert('Erro ao carregar produtos: ' + err.message);
+            } finally {
+                carregandoProdutos = false;
             }
         }
 
-        async function carregarConfigurações() {
-            try {
-                const { data, error } = await supabaseClient.from('configuracoes').select('*').eq('id', 1).single();
-                
-                if(data) {
-                    config = data;
-                    document.getElementById('config-whatsapp').value = config.whatsapp || '5562995175110';
-                    document.getElementById('config-frete').value = config.frete || 25.00;
-                    document.getElementById('config-estoque-min').value = config.estoque_min || 5;
-                } else {
-                    await supabaseClient.from('configuracoes').insert([{
-                        id: 1,
-                        whatsapp: '5562995175110',
-                        frete: 25.00,
-                        estoque_min: 5
-                    }]);
-                    config = { whatsapp: '5562995175110', frete: 25.00, estoque_min: 5 };
-                }
-            } catch(err) {
-                console.error('Erro ao carregar config:', err);
-            }
+        // ==================== ESCUTAR MUDANÇAS EM TEMPO REAL ====================
+        function escutarMudancasProdutos() {
+            sb.channel('produtos-channel')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'produtos'
+                }, (payload) => {
+                    console.log('📡 Mudança detectada:', payload.eventType);
+                    carregarProdutos();
+                })
+                .subscribe();
         }
 
-        async function carregarVendas() {
-            try {
-                const { data, error } = await supabaseClient.from('vendas').select('*').order('created_at', { ascending: false });
-                
-                if(data) {
-                    vendas = data;
-                    console.log('✅ Vendas carregadas:', vendas.length);
-                }
-            } catch(err) {
-                console.error('Erro ao carregar vendas:', err);
-            }
-        }
-
-        async function inicializarProdutosDefault() {
+        // ==================== CRIAR PRODUTOS DEFAULT ====================
+        async function criarProdutosDefault() {
             const produtosDefault = [
                 { id: 101, nome: "Caixa de Som Basike Ba-RAD 044 50W", custo: 300.00, preco_atual: 570.00, estoque: 10, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Portatil_Bluetooth_Com_Radio_Fm_Subwoofer_Ativo_Boombox_Estereo_Hifi_Tws_1_1_Bluetooth_5.3_Bateria_8_Horas_Ipx5_50w_Com_Rgb_Powerbank_para_iPhone_E_Samsung_Cor_Preto.jpg?v=1753149464&width=700", ficha: "50W RMS | Bass Boost | Bateria 8h", cores: ["Preto", "Branco", "Cinza"] },
                 { id: 102, nome: "Caixa de Som Basike Ba RAD 021 15W", custo: 180.00, preco_atual: 349.90, estoque: 8, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomPortatilBluetoothSubwooferTwsIpx5ComRgb_4.jpg?v=1753149227&width=700", ficha: "15W RMS | IPX5 | TWS 1+1", cores: ["Preto", "Vermelho"] },
@@ -513,24 +485,53 @@
             ];
 
             try {
-                const { data, error } = await supabaseClient.from('produtos').select('*');
-                
-                // Verificar se já existem produtos
-                if(!data || data.length === 0) {
-                    await supabaseClient.from('produtos').insert(produtosDefault);
-                    produtos = produtosDefault;
-                    console.log('✅ Produtos padrão inseridos!');
-                } else {
-                    produtos = data;
-                }
-                
-                localStorage.setItem('produtos_backup', JSON.stringify(produtos));
-            } catch(err) {
-                console.error('Erro ao inserir:', err);
+                const { error } = await sb.from('produtos').insert(produtosDefault);
+                if(error) throw error;
                 produtos = produtosDefault;
+                console.log('✅ Produtos padrão criados!');
+            } catch(err) {
+                console.error('❌ Erro ao criar produtos:', err.message);
             }
         }
 
+        // ==================== CARREGAR CONFIGURAÇÕES ====================
+        async function carregarConfigurações() {
+            try {
+                const { data, error } = await sb.from('configuracoes').select('*').eq('id', 1).single();
+                
+                if(data) {
+                    config = data;
+                    console.log('✅ Configurações carregadas');
+                } else {
+                    await sb.from('configuracoes').insert([{
+                        id: 1,
+                        whatsapp: "5562995175110",
+                        frete: 25.00,
+                        estoque_min: 5
+                    }]);
+                }
+                
+                if(document.getElementById('config-whatsapp')) {
+                    document.getElementById('config-whatsapp').value = config.whatsapp;
+                    document.getElementById('config-frete').value = config.frete;
+                    document.getElementById('config-estoque-min').value = config.estoque_min;
+                }
+            } catch(err) {
+                console.error('❌ Erro ao carregar config:', err.message);
+            }
+        }
+
+        // ==================== CARREGAR VENDAS ====================
+        async function carregarVendas() {
+            try {
+                const { data, error } = await sb.from('vendas').select('*').order('created_at', { ascending: false });
+                if(data) vendas = data;
+            } catch(err) {
+                console.error('❌ Erro ao carregar vendas:', err.message);
+            }
+        }
+
+        // ==================== FUNÇÕES UTILITÁRIAS ====================
         function tratarPreco(preco) {
             if (!preco) return 0;
             let p = String(preco).replace('R$', '').replace(/\s/g, '').replace(',', '.');
@@ -548,10 +549,10 @@
             const vitrine = document.getElementById('vitrine');
             vitrine.innerHTML = lista.map(p => {
                 const temEstoque = p.estoque > 0;
-                const estoqueClass = p.estoque <= (config.estoque_min || 5) ? 'baixo' : '';
+                const estoqueClass = p.estoque <= config.estoque_min ? 'baixo' : '';
                 return `
                     <div class="card">
-                        <img src="${p.img}">
+                        <img src="${p.img}" onerror="this.src='https://via.placeholder.com/140?text=Imagem+Indisponível'">
                         <h3>${p.nome}</h3>
                         <div class="preco">R$ ${tratarPreco(p.preco_atual).toFixed(2).replace('.', ',')}</div>
                         <div class="estoque ${estoqueClass}">
@@ -604,7 +605,7 @@
             let sub = 0;
             carrinho.forEach(i => sub += tratarPreco(i.preco_atual));
             document.getElementById('val-subtotal-vitrine').innerText = sub.toFixed(2).replace('.', ',');
-            const total = sub > 0 ? sub + (config.frete || 25) : 0;
+            const total = sub > 0 ? sub + config.frete : 0;
             document.getElementById('total-display').innerText = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
         }
 
@@ -625,37 +626,39 @@
                 subtotal += p;
                 produtosTexto += `✅ *${i.nome}*%0AR$ ${p.toFixed(2).replace('.', ',')}%0A%0A`;
             });
-            const totalFinal = subtotal + (config.frete || 25);
+            const totalFinal = subtotal + config.frete;
             
-            const msg = `*🛍️ NOVO PEDIDO - ELETROZOOM*%0A%0A*👤 CLIENTE:* ${nome}%0A*📧 EMAIL:* ${email}%0A*📱 WHATSAPP:* ${zap}%0A*📍 ENDEREÇO:* ${document.getElementById('f-rua').value}%0A*🏠 QD/LT:* ${document.getElementById('f-quadra').value}/${document.getElementById('f-lote').value}%0A*🏙️ BAIRRO:* ${document.getElementById('f-bairro').value}%0A%0A*🛒 ITENS:*%0A${produtosTexto}*SUBTOTAL:* R$ ${subtotal.toFixed(2).replace('.', ',')}%0A*FRETE:* R$ ${(config.frete || 25).toFixed(2).replace('.', ',')}%0A*💰 TOTAL: R$ ${totalFinal.toFixed(2).replace('.', ',')}*`;
+            const msg = `*🛍️ NOVO PEDIDO - ELETROZOOM*%0A%0A*👤 CLIENTE:* ${nome}%0A*📧 EMAIL:* ${email}%0A*📱 WHATSAPP:* ${zap}%0A*📍 ENDEREÇO:* ${document.getElementById('f-rua').value}%0A*🏠 QD/LT:* ${document.getElementById('f-quadra').value}/${document.getElementById('f-lote').value}%0A*🏙️ BAIRRO:* ${document.getElementById('f-bairro').value}%0A%0A*🛒 ITENS:*%0A${produtosTexto}*SUBTOTAL:* R$ ${subtotal.toFixed(2).replace('.', ',')}%0A*FRETE:* R$ ${config.frete.toFixed(2).replace('.', ',')}%0A*💰 TOTAL: R$ ${totalFinal.toFixed(2).replace('.', ',')}*`;
             
-            window.open(`https://wa.me/${config.whatsapp || '5562995175110'}?text=${msg}`);
+            window.open(`https://wa.me/${config.whatsapp}?text=${msg}`);
             
+            // Registrar venda
             const venda = {
-                data: new Date().toLocaleString('pt-BR'),
                 cliente: nome,
-                itens: carrinho,
+                itens: JSON.stringify(carrinho),
                 subtotal: subtotal,
-                frete: config.frete || 25,
+                frete: config.frete,
                 total: totalFinal,
-                custo_total: carrinho.reduce((acc, item) => acc + (item.custo || 0), 0)
+                custo_total: carrinho.reduce((acc, item) => acc + (item.custo || 0), 0),
+                email: email,
+                whatsapp: zap
             };
 
             try {
-                await supabaseClient.from('vendas').insert([venda]);
-                console.log('✅ Venda registrada!');
+                await sb.from('vendas').insert([venda]);
+                console.log('✅ Venda registrada');
             } catch(err) {
-                console.error('Erro ao registrar venda:', err);
+                console.error('❌ Erro ao registrar venda:', err.message);
             }
 
+            // Atualizar estoque
             for(let item of carrinho) {
                 const prod = produtos.find(p => p.id === item.id);
                 if(prod) {
-                    prod.estoque--;
                     try {
-                        await supabaseClient.from('produtos').update({ estoque: prod.estoque }).eq('id', prod.id);
+                        await sb.from('produtos').update({ estoque: prod.estoque - 1 }).eq('id', prod.id);
                     } catch(err) {
-                        console.error('Erro ao atualizar:', err);
+                        console.error('❌ Erro ao atualizar estoque:', err.message);
                     }
                 }
             }
@@ -697,7 +700,6 @@
             } else {
                 alert("❌ Senha incorreta!");
                 document.getElementById('adminSenha').value = '';
-                document.getElementById('adminSenha').focus();
             }
         }
 
@@ -715,6 +717,7 @@
         function preencherTabelaAdmin() {
             const tbody = document.getElementById('adminTableBody');
             tbody.innerHTML = produtos.map(p => {
+                const avisoEstoque = p.estoque <= config.estoque_min ? '⚠️' : '';
                 const coresHTML = p.cores && p.cores.length > 0 ? p.cores.map((cor, idx) => `
                     <div class="cor-badge">
                         ${cor}
@@ -728,7 +731,7 @@
                         <td><input type="text" value="${p.nome}" onchange="atualizarProdutoAdmin(${p.id}, 'nome', this.value)"></td>
                         <td><input type="number" value="${p.custo || 0}" step="0.01" onchange="atualizarProdutoAdmin(${p.id}, 'custo', this.value)"></td>
                         <td><input type="number" value="${p.preco_atual}" step="0.01" onchange="atualizarProdutoAdmin(${p.id}, 'preco_atual', this.value)"></td>
-                        <td><input type="number" value="${p.estoque}" onchange="atualizarProdutoAdmin(${p.id}, 'estoque', this.value)"></td>
+                        <td><input type="number" value="${p.estoque}" onchange="atualizarProdutoAdmin(${p.id}, 'estoque', this.value)"> ${avisoEstoque}</td>
                         <td>
                             <div class="cores-container">${coresHTML}</div>
                             <div class="cores-input-group">
@@ -743,21 +746,19 @@
         }
 
         async function atualizarProdutoAdmin(id, campo, valor) {
-            const prod = produtos.find(p => p.id === id);
-            if(prod) {
+            try {
+                const updateObj = {};
                 if(campo === 'preco_atual' || campo === 'custo' || campo === 'estoque') {
-                    prod[campo] = parseFloat(valor);
+                    updateObj[campo] = parseFloat(valor);
                 } else {
-                    prod[campo] = valor;
+                    updateObj[campo] = valor;
                 }
-
-                try {
-                    await supabaseClient.from('produtos').update({ [campo]: campo === 'preco_atual' || campo === 'custo' || campo === 'estoque' ? parseFloat(valor) : valor }).eq('id', id);
-                    mostrarSync();
-                    render(produtos);
-                } catch(err) {
-                    console.error('Erro:', err);
-                }
+                
+                const { error } = await sb.from('produtos').update(updateObj).eq('id', id);
+                if(error) throw error;
+                mostrarSync();
+            } catch(err) {
+                console.error('❌ Erro:', err.message);
             }
         }
 
@@ -765,7 +766,7 @@
             const prod = produtos.find(p => p.id === produtoId);
             if(prod && prod.cores) {
                 prod.cores.splice(indice, 1);
-                supabaseClient.from('produtos').update({ cores: prod.cores }).eq('id', produtoId);
+                sb.from('produtos').update({ cores: prod.cores }).eq('id', produtoId);
                 preencherTabelaAdmin();
             }
         }
@@ -780,7 +781,7 @@
                     if(!prod.cores.includes(corNova)) {
                         prod.cores.push(corNova);
                         inputEl.value = '';
-                        supabaseClient.from('produtos').update({ cores: prod.cores }).eq('id', produtoId);
+                        sb.from('produtos').update({ cores: prod.cores }).eq('id', produtoId);
                         preencherTabelaAdmin();
                     } else {
                         alert("Esta cor já existe!");
@@ -809,12 +810,10 @@
                 return;
             }
 
-            const novoProduto = { id, nome, custo, preco_atual: preco, estoque, img, ficha, cores };
-            
             try {
-                await supabaseClient.from('produtos').insert([novoProduto]);
-                produtos.push(novoProduto);
-                alert("✅ Produto adicionado com sucesso!");
+                const { error } = await sb.from('produtos').insert([{ id, nome, custo, preco_atual: preco, estoque, img, ficha, cores }]);
+                if(error) throw error;
+                alert("✅ Produto adicionado!");
                 
                 document.getElementById('novo-id').value = '';
                 document.getElementById('novo-nome').value = '';
@@ -824,24 +823,19 @@
                 document.getElementById('novo-img').value = '';
                 document.getElementById('novo-ficha').value = '';
                 document.getElementById('novo-cores').value = '';
-                
-                preencherTabelaAdmin();
-                render(produtos);
             } catch(err) {
-                console.error('Erro:', err);
+                console.error('❌ Erro:', err.message);
                 alert('Erro ao adicionar produto!');
             }
         }
 
         async function removerProdutoAdmin(id) {
-            if(confirm("Tem certeza que deseja remover?")) {
+            if(confirm("Tem certeza?")) {
                 try {
-                    await supabaseClient.from('produtos').delete().eq('id', id);
-                    produtos = produtos.filter(p => p.id !== id);
-                    preencherTabelaAdmin();
-                    render(produtos);
+                    const { error } = await sb.from('produtos').delete().eq('id', id);
+                    if(error) throw error;
                 } catch(err) {
-                    console.error('Erro:', err);
+                    console.error('❌ Erro:', err.message);
                 }
             }
         }
@@ -850,13 +844,11 @@
             const container = document.getElementById('relatorioVendas');
             
             if(vendas.length === 0) {
-                container.innerHTML = '<div class="alert alert-info">📭 Nenhuma venda registrada ainda</div>';
+                container.innerHTML = '<div class="alert alert-info">📭 Nenhuma venda registrada</div>';
                 return;
             }
 
-            let totalLucro = 0;
-            let totalReceita = 0;
-            let totalCusto = 0;
+            let totalLucro = 0, totalReceita = 0, totalCusto = 0;
 
             const html = vendas.map((venda, idx) => {
                 const lucro = venda.total - venda.custo_total - venda.frete;
@@ -866,71 +858,48 @@
 
                 return `
                     <div class="relatorio-card">
-                        <strong>#${vendas.length - idx} - ${venda.data}</strong>
-                        <div class="relatorio-item">
-                            <span>Cliente: ${venda.cliente}</span>
-                        </div>
-                        <div class="relatorio-item">
-                            <span>Itens:</span>
-                            <span>${venda.itens.length}</span>
-                        </div>
-                        <div class="relatorio-item">
-                            <span>Custo Total:</span>
-                            <span>R$ ${venda.custo_total.toFixed(2).replace('.', ',')}</span>
-                        </div>
-                        <div class="relatorio-item">
-                            <span>Subtotal Venda:</span>
-                            <span>R$ ${venda.subtotal.toFixed(2).replace('.', ',')}</span>
-                        </div>
-                        <div class="relatorio-item">
-                            <span>Frete:</span>
-                            <span>R$ ${venda.frete.toFixed(2).replace('.', ',')}</span>
-                        </div>
-                        <div class="relatorio-item">
-                            <span>Total Recebido:</span>
-                            <span>R$ ${venda.total.toFixed(2).replace('.', ',')}</span>
-                        </div>
-                        <div class="relatorio-item">
-                            <span>💰 Lucro:</span>
-                            <span class="${lucro >= 0 ? 'relatorio-lucro' : 'relatorio-prejuizo'}">
-                                ${lucro >= 0 ? '+' : ''}R$ ${lucro.toFixed(2).replace('.', ',')}
-                            </span>
-                        </div>
+                        <strong>#${idx + 1}</strong>
+                        <div class="relatorio-item"><span>Cliente:</span><span>${venda.cliente}</span></div>
+                        <div class="relatorio-item"><span>Subtotal:</span><span>R$ ${venda.subtotal.toFixed(2).replace('.', ',')}</span></div>
+                        <div class="relatorio-item"><span>Frete:</span><span>R$ ${venda.frete.toFixed(2).replace('.', ',')}</span></div>
+                        <div class="relatorio-item"><span>Total:</span><span>R$ ${venda.total.toFixed(2).replace('.', ',')}</span></div>
+                        <div class="relatorio-item"><span>💰 Lucro:</span><span class="${lucro >= 0 ? 'relatorio-lucro' : 'relatorio-prejuizo'}">${lucro >= 0 ? '+' : ''}R$ ${lucro.toFixed(2).replace('.', ',')}</span></div>
                     </div>
                 `;
             }).join('');
 
             container.innerHTML = html + `
                 <div class="relatorio-total">
-                    <div style="margin: 10px 0;">💵 Custo Total: R$ ${totalCusto.toFixed(2).replace('.', ',')}</div>
-                    <div style="margin: 10px 0;">💰 Receita Total: R$ ${totalReceita.toFixed(2).replace('.', ',')}</div>
-                    <div style="margin: 10px 0; font-size: 1.4rem;">
-                        📊 LUCRO TOTAL: R$ ${totalLucro.toFixed(2).replace('.', ',')}
-                    </div>
+                    <div>💵 Custo: R$ ${totalCusto.toFixed(2).replace('.', ',')}</div>
+                    <div>💰 Receita: R$ ${totalReceita.toFixed(2).replace('.', ',')}</div>
+                    <div style="font-size: 1.4rem;">📊 LUCRO: R$ ${totalLucro.toFixed(2).replace('.', ',')}</div>
                 </div>
             `;
         }
 
         async function limparVendas() {
-            if(confirm("⚠️ Tem certeza? Esta ação não pode ser desfeita!")) {
+            if(confirm("⚠️ Tem certeza?")) {
                 try {
-                    await supabaseClient.from('vendas').delete().gte('id', 0);
+                    const { error } = await sb.from('vendas').delete().gte('id', 0);
+                    if(error) throw error;
                     vendas = [];
                     gerarRelatorio();
-                    alert("✅ Histórico de vendas limpo!");
+                    alert("✅ Histórico limpo!");
                 } catch(err) {
-                    console.error('Erro:', err);
+                    console.error('❌ Erro:', err.message);
                 }
             }
         }
 
         async function salvarConfig() {
             try {
-                await supabaseClient.from('configuracoes').update({
+                const { error } = await sb.from('configuracoes').update({
                     whatsapp: document.getElementById('config-whatsapp').value,
                     frete: parseFloat(document.getElementById('config-frete').value),
                     estoque_min: parseInt(document.getElementById('config-estoque-min').value)
                 }).eq('id', 1);
+                
+                if(error) throw error;
                 
                 config = {
                     whatsapp: document.getElementById('config-whatsapp').value,
@@ -940,16 +909,11 @@
                 
                 mostrarSync();
             } catch(err) {
-                console.error('Erro:', err);
+                console.error('❌ Erro:', err.message);
             }
         }
 
-        window.onload = async () => {
-            console.log('🚀 Iniciando...');
-            await carregarConfigurações();
-            await carregarProdutos();
-            await carregarVendas();
-        };
+        window.onload = inicializar;
 
         window.onclick = function(event) {
             const modal = document.getElementById('adminModal');
