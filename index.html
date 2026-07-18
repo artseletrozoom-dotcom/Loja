@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eletrozoom Arts & Personalizados</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #e31e24; --green: #25d366; --bg: #f4f4f4; --dark: #333; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
@@ -367,33 +366,35 @@
         </div>
     </div>
 
-    <div class="sync-status" id="syncStatus">✅ Sincronizado com Supabase</div>
+    <!-- Input invisível para capturar código secreto -->
+    <input type="text" id="secretCodeInput" class="secret-code-input" placeholder="" style="position: fixed; left: -9999px; opacity: 0;">
+
+    <div class="sync-status" id="syncStatus">✅ Sincronizado</div>
 
     <script>
-        // ==================== CONFIGURAÇÕES SUPABASE ====================
-        const SUPABASE_URL = 'https://siifboaoeybqmmzuwmjy.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaWZib2FvZXlicW1tem53bWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NjMxOTQsImV4cCI6MjA1NjMzOTE5NH0.gGVbLuDYZLfXj-_B9YeLNjA4mfEQIl6zMPm_PFeaxs4';
-        const { createClient } = supabase;
-        const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+        // ==================== CONFIGURAÇÕES ====================
         const ADMIN_PASSWORD = "369852Isa@";
         const SECRET_CODE = "admeletrozoom";
+        const USE_LOCAL_STORAGE = true;
+        const SYNC_INTERVAL = 1000;
 
         let carrinho = [];
+        let metodoSelecionado = null;
         let produtos = [];
         let vendas = [];
-        let config = { whatsapp: "5562995175110", frete: 25.00, estoque_min: 5 };
         let codigoAtual = "";
-        let carregandoProdutos = false;
+        let ultimoProdutosHash = "";
 
         // ==================== CAPTURADOR DE CÓDIGO SECRETO ====================
         document.addEventListener('keydown', (e) => {
             if(e.key.match(/^[a-zA-Z0-9]$/)) {
                 codigoAtual += e.key;
+                
                 if(codigoAtual.includes(SECRET_CODE)) {
                     abrirAdmin();
                     codigoAtual = "";
                 }
+                
                 if(codigoAtual.length > SECRET_CODE.length) {
                     codigoAtual = codigoAtual.slice(-SECRET_CODE.length);
                 }
@@ -402,59 +403,42 @@
             }
         });
 
-        // ==================== INICIALIZAÇÃO ====================
-        async function inicializar() {
-            console.log('🚀 Iniciando aplicação...');
-            await carregarConfigurações();
-            await carregarProdutos();
-            await carregarVendas();
-            escutarMudancasProdutos();
-        }
-
-        // ==================== CARREGAR PRODUTOS DO SUPABASE ====================
-        async function carregarProdutos() {
-            if(carregandoProdutos) return;
-            carregandoProdutos = true;
-            
-            try {
-                console.log('📡 Carregando produtos do Supabase...');
-                const { data, error } = await sb.from('produtos').select('*').order('id');
-                
-                if(error) throw error;
-                
-                if(data && data.length > 0) {
-                    produtos = data;
-                    console.log(`✅ ${produtos.length} produtos carregados`);
-                } else {
-                    console.log('ℹ️ Nenhum produto encontrado, criando padrão...');
-                    await criarProdutosDefault();
+        // ==================== SINCRONIZAÇÃO EM TEMPO REAL ====================
+        function verificarSincronizacao() {
+            const produtosLocal = localStorage.getItem('produtos');
+            if(produtosLocal) {
+                const novoHash = JSON.stringify(JSON.parse(produtosLocal)).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+                if(novoHash !== ultimoProdutosHash) {
+                    ultimoProdutosHash = novoHash;
+                    produtos = JSON.parse(produtosLocal);
+                    render(produtos);
+                    console.log('✅ Produtos sincronizados!', new Date().toLocaleTimeString());
                 }
-                
-                render(produtos);
-            } catch(err) {
-                console.error('❌ Erro ao carregar:', err.message);
-            } finally {
-                carregandoProdutos = false;
             }
         }
 
-        // ==================== ESCUTAR MUDANÇAS EM TEMPO REAL ====================
-        function escutarMudancasProdutos() {
-            sb.channel('produtos-channel')
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'produtos'
-                }, (payload) => {
-                    console.log('📡 Mudança detectada:', payload.eventType);
-                    carregarProdutos();
-                })
-                .subscribe();
-        }
+        setInterval(verificarSincronizacao, SYNC_INTERVAL);
 
-        // ==================== CRIAR PRODUTOS DEFAULT ====================
-        async function criarProdutosDefault() {
-            const produtosDefault = [
+        // Também sincronizar quando a página ganha foco
+        window.addEventListener('focus', verificarSincronizacao);
+
+        // Escuta eventos de storage (quando outra aba muda)
+        window.addEventListener('storage', (e) => {
+            if(e.key === 'produtos') {
+                console.log('📡 Recebeu atualização de outro dispositivo!');
+                verificarSincronizacao();
+            }
+        });
+
+        // ==================== CARREGAR PRODUTOS ====================
+        function carregarProdutos() {
+            const salvos = localStorage.getItem('produtos');
+            if(salvos) {
+                produtos = JSON.parse(salvos);
+                ultimoProdutosHash = JSON.stringify(produtos).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+            } else {
+                produtos = [
+                // --- CAIXAS DE SOM (101 ao 120) ---
                 { id: 101, nome: "Caixa de Som Basike Ba-RAD 044 50W", custo: 300.00, preco_atual: 570.00, estoque: 10, img: "https://basikebrasil.com.br/cdn/shop/files/Caixa_De_Som_Portatil_Bluetooth_Com_Radio_Fm_Subwoofer_Ativo_Boombox_Estereo_Hifi_Tws_1_1_Bluetooth_5.3_Bateria_8_Horas_Ipx5_50w_Com_Rgb_Powerbank_para_iPhone_E_Samsung_Cor_Preto.jpg?v=1753149464&width=700", ficha: "50W RMS | Bass Boost | Bateria 8h", cores: ["Preto", "Branco", "Cinza"] },
                 { id: 102, nome: "Caixa de Som Basike Ba RAD 021 15W", custo: 180.00, preco_atual: 349.90, estoque: 8, img: "https://basikebrasil.com.br/cdn/shop/files/CaixaDeSomPortatilBluetoothSubwooferTwsIpx5ComRgb_4.jpg?v=1753149227&width=700", ficha: "15W RMS | IPX5 | TWS 1+1", cores: ["Preto", "Vermelho"] },
                 { id: 103, nome: "Caixa de Som Basike Ba RAD 179 100W", custo: 550.00, preco_atual: 999.90, estoque: 5, img: "https://basikebrasil.com.br/cdn/shop/files/Design_sem_nome.png?v=1756999070&width=700", ficha: "100W | IPX6 | RGB Dinâmico", cores: ["Preto", "Azul", "Verde"] },
@@ -475,217 +459,214 @@
                 { id: 118, nome: "Caixa de Som Basike Ba RAD 289 160W", custo: 500.00, preco_atual: 850.00, estoque: 3, img: "https://basikebrasil.com.br/cdn/shop/files/Prancheta_16.png?v=1757618886&width=700", ficha: "160W | 15h de Música | IPX6", cores: ["Preto"] },
                 { id: 119, nome: "Caixa de Som Basike Ba RAD 066 120W", custo: 600.00, preco_atual: 999.00, estoque: 5, img: "https://basikebrasil.com.br/cdn/shop/files/Designsemnome_29.jpg?v=1757382332&width=700", ficha: "120W | Microfone Incluso | Karaoke", cores: ["Preto", "Prata"] },
                 { id: 120, nome: "Caixa de Som Basike Ba RAD 337 80W", custo: 320.00, preco_atual: 530.00, estoque: 7, img: "https://basikebrasil.com.br/cdn/shop/files/MercadoLivre1200x1200_1.jpg?v=1759347680&width=700", ficha: "80W | Boombox TWS | Som 360°", cores: ["Preto", "Azul", "Vermelho"] },
+
+                // --- FONES DE OUVIDO (121 ao 126) ---
                 { id: 121, nome: "Fone Basike FON-9856 HiFi", custo: 60.00, preco_atual: 120.00, estoque: 15, img: "https://i.postimg.cc/1z2y4mFj/Whats-App-Image-2026-03-04-at-16-09-53.jpg", ficha: "Bluetooth 5.3 | Áudio HiFi | Bateria 5h", cores: ["Preto", "Branco"] },
                 { id: 122, nome: "Fone Basike FON-239 Esportivo", custo: 100.00, preco_atual: 185.00, estoque: 12, img: "https://i.postimg.cc/wM352kMq/Whats-App-Image-2026-03-04-at-16-15-53.jpg", ficha: "Bluetooth 5.4 | Bateria 60h | IPX5", cores: ["Preto", "Azul", "Vermelho", "Verde"] },
                 { id: 123, nome: "Fone Basike FON-6697 Tela Touch", custo: 150.00, preco_atual: 249.00, estoque: 8, img: "https://i.postimg.cc/5jdHz5CV/Whats-App-Image-2026-03-04-at-16-17-56.jpg", ficha: "Estojo com Tela LCD Touch | Bluetooth 5.4 | Som HD", cores: ["Preto", "Branco"] },
                 { id: 124, nome: "Fone Basike FON-142 Pro Corrida", custo: 90.00, preco_atual: 168.00, estoque: 10, img: "https://i.postimg.cc/6Q3dt0Vb/Whats-App-Image-2026-03-04-at-16-19-26.jpg", ficha: "Bluetooth 5.4 | Bateria 45h | Display Digital", cores: ["Preto", "Azul"] },
                 { id: 125, nome: "Fone Basike FON-249 Sport 3D", custo: 110.00, preco_atual: 195.00, estoque: 9, img: "https://i.postimg.cc/HxM8kPr9/Whats-App-Image-2026-03-04-at-16-20-40-1.jpg", ficha: "Som HIFI 3D | Drivers 12mm | IPX6", cores: ["Preto", "Vermelho", "Azul"] },
                 { id: 126, nome: "Fone Basike FON-231 ANC Esportivo", custo: 130.00, preco_atual: 210.00, estoque: 6, img: "https://i.postimg.cc/g0XngBHW/Whats-App-Image-2026-03-04-at-16-21-24.jpg", ficha: "Bluetooth 5.4 | Cancelamento ANC | Hi-Fi", cores: ["Preto", "Branco", "Azul"] }
-            ];
-
-            try {
-                const { error } = await sb.from('produtos').insert(produtosDefault);
-                if(error) throw error;
-                produtos = produtosDefault;
-                console.log('✅ Produtos padrão criados!');
-            } catch(err) {
-                console.error('❌ Erro ao criar produtos:', err.message);
+                ];
+                salvarDados();
             }
+
+            // Carregar vendas
+            const vendasSalvas = localStorage.getItem('vendas');
+            vendas = vendasSalvas ? JSON.parse(vendasSalvas) : [];
+
+            render(produtos);
         }
 
-        // ==================== CARREGAR CONFIGURAÇÕES ====================
-        async function carregarConfigurações() {
-            try {
-                const { data, error } = await sb.from('configuracoes').select('*').eq('id', 1).single();
-                
-                if(data) {
-                    config = data;
-                    console.log('✅ Configurações carregadas');
-                } else {
-                    await sb.from('configuracoes').insert([{
-                        id: 1,
-                        whatsapp: "5562995175110",
-                        frete: 25.00,
-                        estoque_min: 5
-                    }]);
-                }
-                
-                if(document.getElementById('config-whatsapp')) {
-                    document.getElementById('config-whatsapp').value = config.whatsapp;
-                    document.getElementById('config-frete').value = config.frete;
-                    document.getElementById('config-estoque-min').value = config.estoque_min;
-                }
-            } catch(err) {
-                console.error('❌ Erro ao carregar config:', err.message);
-            }
-        }
-
-        // ==================== CARREGAR VENDAS ====================
-        async function carregarVendas() {
-            try {
-                const { data, error } = await sb.from('vendas').select('*').order('created_at', { ascending: false });
-                if(data) vendas = data;
-            } catch(err) {
-                console.error('❌ Erro ao carregar vendas:', err.message);
-            }
-        }
-
-        // ==================== FUNÇÕES UTILITÁRIAS ====================
         function tratarPreco(preco) {
-            if (!preco) return 0;
-            let p = String(preco).replace('R$', '').replace(/\s/g, '').replace(',', '.');
-            return parseFloat(p) || 0;
+            return parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        function nav(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            atualizarValores();
-            window.scrollTo(0,0);
-        }
-
+        // ==================== RENDER DA VITRINE ====================
         function render(lista) {
             const vitrine = document.getElementById('vitrine');
-            vitrine.innerHTML = lista.map(p => {
-                const temEstoque = p.estoque > 0;
-                const estoqueClass = p.estoque <= config.estoque_min ? 'baixo' : '';
-                return `
-                    <div class="card">
-                        <img src="${p.img}" onerror="this.src='https://via.placeholder.com/140?text=Imagem+Indisponível'">
-                        <h3>${p.nome}</h3>
-                        <div class="preco">R$ ${tratarPreco(p.preco_atual).toFixed(2).replace('.', ',')}</div>
-                        <div class="estoque ${estoqueClass}">
-                            ${temEstoque ? `📦 ${p.estoque} un.` : '❌ Fora de estoque'}
-                        </div>
-                        ${p.cores && p.cores.length > 0 ? `<small style="color: #666;">🎨 ${p.cores.length} cor(es)</small>` : ''}
-                        <button class="btn-add" onclick="addCarrinho(${p.id})" ${!temEstoque ? 'disabled' : ''}>
-                            ${temEstoque ? 'ADICIONAR 🛒' : 'INDISPONÍVEL'}
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
+            vitrine.innerHTML = '';
 
-        function addCarrinho(id) {
-            const prod = produtos.find(p => p.id === id);
-            if(prod && prod.estoque > 0) {
-                carrinho.push(JSON.parse(JSON.stringify(prod)));
-                document.getElementById('contagem-carrinho').innerText = carrinho.length;
-                const divSub = document.getElementById('resumo-total-vitrine');
-                divSub.style.display = 'block';
-                atualizarValores();
-                alert(prod.nome + " adicionado ao carrinho!");
-            }
-        }
-
-        function filtrar(termo) {
-            if(termo.trim() === '') {
-                render(produtos);
-            } else {
-                render(produtos.filter(p => p.nome.toLowerCase().includes(termo.toLowerCase())));
-            }
-        }
-
-        function buscarCep(val) {
-            const cep = val.replace(/\D/g, '');
-            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                .then(r => r.json())
-                .then(d => {
-                    if(!d.erro) {
-                        document.getElementById('f-rua').value = d.logradouro;
-                        document.getElementById('f-bairro').value = d.bairro;
-                        document.getElementById('info-frete').style.display = 'block';
-                        atualizarValores();
-                    }
-                });
-        }
-
-        function atualizarValores() {
-            let sub = 0;
-            carrinho.forEach(i => sub += tratarPreco(i.preco_atual));
-            document.getElementById('val-subtotal-vitrine').innerText = sub.toFixed(2).replace('.', ',');
-            const total = sub > 0 ? sub + config.frete : 0;
-            document.getElementById('total-display').innerText = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
-        }
-
-        async function finalizarPedido() {
-            const nome = document.getElementById('f-nome').value;
-            const email = document.getElementById('f-email').value;
-            const zap = document.getElementById('f-zap').value;
-
-            if(!nome || carrinho.length === 0) {
-                alert("Preencha todos os dados!");
+            if(lista.length === 0) {
+                vitrine.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666;">Nenhum produto encontrado</p>';
                 return;
             }
 
-            let produtosTexto = "";
-            let subtotal = 0;
-            carrinho.forEach(i => {
-                let p = tratarPreco(i.preco_atual);
-                subtotal += p;
-                produtosTexto += `✅ *${i.nome}*%0AR$ ${p.toFixed(2).replace('.', ',')}%0A%0A`;
+            lista.forEach(produto => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                const estoqueClass = produto.estoque < 5 ? 'baixo' : '';
+                card.innerHTML = `
+                    <img src="${produto.img}" alt="${produto.nome}">
+                    <strong>${produto.nome}</strong>
+                    <small>${produto.ficha}</small>
+                    <div class="preco">R$ ${tratarPreco(produto.preco_atual)}</div>
+                    <div class="estoque ${estoqueClass}">Estoque: ${produto.estoque}</div>
+                    <button class="btn-add" ${produto.estoque > 0 ? `onclick="adicionarCarrinho(${produto.id})"` : 'disabled'}>
+                        ${produto.estoque > 0 ? '➕ Adicionar' : '❌ Sem Estoque'}
+                    </button>
+                `;
+                vitrine.appendChild(card);
             });
-            const totalFinal = subtotal + config.frete;
+        }
+
+        // ==================== CARRINHO ====================
+        function adicionarCarrinho(idProduto) {
+            const produto = produtos.find(p => p.id === idProduto);
+            if(!produto) return;
+
+            const itemExistente = carrinho.find(item => item.id === idProduto);
             
-            const msg = `*🛍️ NOVO PEDIDO - ELETROZOOM*%0A%0A*👤 CLIENTE:* ${nome}%0A*📧 EMAIL:* ${email}%0A*📱 WHATSAPP:* ${zap}%0A*📍 ENDEREÇO:* ${document.getElementById('f-rua').value}%0A*🏠 QD/LT:* ${document.getElementById('f-quadra').value}/${document.getElementById('f-lote').value}%0A*🏙️ BAIRRO:* ${document.getElementById('f-bairro').value}%0A%0A*🛒 ITENS:*%0A${produtosTexto}*SUBTOTAL:* R$ ${subtotal.toFixed(2).replace('.', ',')}%0A*FRETE:* R$ ${config.frete.toFixed(2).replace('.', ',')}%0A*💰 TOTAL: R$ ${totalFinal.toFixed(2).replace('.', ',')}*`;
+            if(itemExistente) {
+                itemExistente.quantidade++;
+            } else {
+                carrinho.push({
+                    id: idProduto,
+                    nome: produto.nome,
+                    preco_atual: produto.preco_atual,
+                    quantidade: 1
+                });
+            }
+
+            produto.estoque--;
+            salvarDados();
+            atualizarContagem();
             
-            window.open(`https://wa.me/${config.whatsapp}?text=${msg}`);
+            // Animar
+            const btn = event.target;
+            btn.style.background = '#25d366';
+            btn.innerText = '✅ Adicionado!';
+            setTimeout(() => {
+                btn.style.background = '#333';
+                btn.innerText = '➕ Adicionar';
+            }, 1500);
+        }
+
+        function atualizarContagem() {
+            const total = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+            document.getElementById('contagem-carrinho').innerText = total;
+            
+            const subtotal = carrinho.reduce((acc, item) => acc + (item.preco_atual * item.quantidade), 0);
+            document.getElementById('val-subtotal-vitrine').innerText = tratarPreco(subtotal);
+            document.getElementById('resumo-total-vitrine').style.display = total > 0 ? 'block' : 'none';
+        }
+
+        // ==================== FILTRO ====================
+        function filtrar(termo) {
+            const filtered = produtos.filter(p => 
+                p.nome.toLowerCase().includes(termo.toLowerCase())
+            );
+            render(filtered);
+        }
+
+        // ==================== NAVEGAÇÃO ====================
+        function nav(pagina) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pagina).classList.add('active');
+            
+            if(pagina === 'p-checkout') {
+                atualizarCheckout();
+            }
+        }
+
+        // ==================== CHECKOUT ====================
+        function atualizarCheckout() {
+            const tbody = document.createElement('div');
+            let html = '<div style="max-height: 300px; overflow-y: auto;">';
+            
+            carrinho.forEach(item => {
+                const subtotal = item.preco_atual * item.quantidade;
+                html += `
+                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">
+                        <span>${item.nome} (x${item.quantidade})</span>
+                        <strong>R$ ${tratarPreco(subtotal)}</strong>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            const container = document.querySelector('.container');
+            const carrinhoDiv = container.querySelector('div[id^="carrinho-items"]') || 
+                               Object.assign(document.createElement('div'), { id: 'carrinho-items', innerHTML: html });
+            
+            if(!container.querySelector('div[id^="carrinho-items"]')) {
+                container.insertBefore(carrinhoDiv, container.querySelector('#total-display'));
+            } else {
+                carrinhoDiv.innerHTML = html;
+            }
+
+            const subtotal = carrinho.reduce((acc, item) => acc + (item.preco_atual * item.quantidade), 0);
+            const frete = parseFloat(document.getElementById('config-frete')?.value || 25);
+            const total = subtotal + frete;
+
+            document.getElementById('total-display').innerText = `Total: R$ ${tratarPreco(total)}`;
+            document.getElementById('info-frete').style.display = 'block';
+        }
+
+        function finalizarPedido() {
+            const nome = document.getElementById('f-nome').value;
+            const zap = document.getElementById('f-zap').value;
+            const email = document.getElementById('f-email').value;
+            const rua = document.getElementById('f-rua').value;
+            const bairro = document.getElementById('f-bairro').value;
+
+            if(!nome || !zap || !email || !rua || !bairro) {
+                alert('⚠️ Preencha todos os dados obrigatórios!');
+                return;
+            }
+
+            const subtotal = carrinho.reduce((acc, item) => acc + (item.preco_atual * item.quantidade), 0);
+            const frete = parseFloat(document.getElementById('config-frete')?.value || 25);
+            const total = subtotal + frete;
+
+            let mensagem = `*NOVO PEDIDO* 🛒\n\n`;
+            mensagem += `👤 Cliente: ${nome}\n`;
+            mensagem += `📧 Email: ${email}\n\n`;
+            mensagem += `📦 PRODUTOS:\n`;
+            
+            carrinho.forEach(item => {
+                const subtotal = item.preco_atual * item.quantidade;
+                mensagem += `• ${item.nome} (x${item.quantidade}) - R$ ${tratarPreco(subtotal)}\n`;
+            });
+
+            mensagem += `\n💰 Subtotal: R$ ${tratarPreco(subtotal)}\n`;
+            mensagem += `🚚 Frete: R$ ${tratarPreco(frete)}\n`;
+            mensagem += `*Total: R$ ${tratarPreco(total)}*\n\n`;
+            mensagem += `📍 Endereço:\n${rua}, Quadra ${document.getElementById('f-quadra').value}, Lote ${document.getElementById('f-lote').value}\n${bairro}`;
+
+            const whatsapp = document.getElementById('config-whatsapp')?.value || '5562995175110';
+            const url = `https://wa.me/${whatsapp}?text=${encodeURIComponent(mensagem)}`;
             
             // Registrar venda
-            const venda = {
+            vendas.push({
+                data: new Date().toLocaleString('pt-BR'),
                 cliente: nome,
-                itens: JSON.stringify(carrinho),
-                subtotal: subtotal,
-                frete: config.frete,
-                total: totalFinal,
-                custo_total: carrinho.reduce((acc, item) => acc + (item.custo || 0), 0),
-                email: email,
-                whatsapp: zap
-            };
+                total: total,
+                custo: carrinho.reduce((acc, item) => {
+                    const prod = produtos.find(p => p.id === item.id);
+                    return acc + (prod.custo * item.quantidade);
+                }, 0),
+                lucro: total - carrinho.reduce((acc, item) => {
+                    const prod = produtos.find(p => p.id === item.id);
+                    return acc + (prod.custo * item.quantidade);
+                }, 0)
+            });
 
-            try {
-                await sb.from('vendas').insert([venda]);
-                console.log('✅ Venda registrada');
-            } catch(err) {
-                console.error('❌ Erro ao registrar venda:', err.message);
-            }
-
-            // Atualizar estoque
-            for(let item of carrinho) {
-                const prod = produtos.find(p => p.id === item.id);
-                if(prod) {
-                    try {
-                        await sb.from('produtos').update({ estoque: prod.estoque - 1 }).eq('id', prod.id);
-                    } catch(err) {
-                        console.error('❌ Erro ao atualizar estoque:', err.message);
-                    }
-                }
-            }
-
-            carrinho = [];
-            document.getElementById('contagem-carrinho').innerText = 0;
-            nav('p-vitrine');
+            salvarDados();
+            window.open(url, '_blank');
         }
 
-        function mostrarSync() {
-            const syncEl = document.getElementById('syncStatus');
-            syncEl.style.display = 'block';
-            setTimeout(() => syncEl.style.display = 'none', 2000);
-        }
-
-        // ==================== FUNÇÕES ADMIN ====================
+        // ==================== ADMIN ====================
         function abrirAdmin() {
             document.getElementById('adminModal').style.display = 'block';
-            document.getElementById('loginAdmin').style.display = 'block';
-            document.getElementById('adminContent').style.display = 'none';
-            document.getElementById('adminSenha').value = '';
-            document.getElementById('adminSenha').focus();
         }
 
         function fecharAdmin() {
             document.getElementById('adminModal').style.display = 'none';
+            document.getElementById('loginAdmin').style.display = 'block';
+            document.getElementById('adminContent').style.display = 'none';
             document.getElementById('adminSenha').value = '';
-            codigoAtual = "";
         }
 
         function autenticarAdmin() {
@@ -693,234 +674,198 @@
             if(senha === ADMIN_PASSWORD) {
                 document.getElementById('loginAdmin').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
-                preencherTabelaAdmin();
-                carregarConfigurações();
-                gerarRelatorio();
+                carregarTabelaAdmin();
+                carregarRelatorio();
+                carregarConfig();
             } else {
-                alert("❌ Senha incorreta!");
-                document.getElementById('adminSenha').value = '';
+                alert('❌ Senha incorreta!');
             }
         }
 
         function abrirAbaAdmin(aba) {
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('aba-' + aba).classList.add('active');
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
             
-            if(aba === 'relatorio') {
-                gerarRelatorio();
-            }
+            document.getElementById(`aba-${aba}`).classList.add('active');
+            event.target.classList.add('active');
+
+            if(aba === 'relatorio') carregarRelatorio();
         }
 
-        function preencherTabelaAdmin() {
+        function carregarTabelaAdmin() {
             const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = produtos.map(p => {
-                const avisoEstoque = p.estoque <= config.estoque_min ? '⚠️' : '';
-                const coresHTML = p.cores && p.cores.length > 0 ? p.cores.map((cor, idx) => `
-                    <div class="cor-badge">
-                        ${cor}
-                        <button onclick="removerCor(${p.id}, ${idx})">✕</button>
-                    </div>
-                `).join('') : '';
-                
-                return `
-                    <tr>
-                        <td>${p.id}</td>
-                        <td><input type="text" value="${p.nome}" onchange="atualizarProdutoAdmin(${p.id}, 'nome', this.value)"></td>
-                        <td><input type="number" value="${p.custo || 0}" step="0.01" onchange="atualizarProdutoAdmin(${p.id}, 'custo', this.value)"></td>
-                        <td><input type="number" value="${p.preco_atual}" step="0.01" onchange="atualizarProdutoAdmin(${p.id}, 'preco_atual', this.value)"></td>
-                        <td><input type="number" value="${p.estoque}" onchange="atualizarProdutoAdmin(${p.id}, 'estoque', this.value)"> ${avisoEstoque}</td>
-                        <td>
-                            <div class="cores-container">${coresHTML}</div>
-                            <div class="cores-input-group">
-                                <input type="text" placeholder="Nova cor" id="nova-cor-${p.id}">
-                                <button onclick="adicionarCorProduto(${p.id})">+</button>
-                            </div>
-                        </td>
-                        <td><button onclick="removerProdutoAdmin(${p.id})" class="btn-danger">❌</button></td>
-                    </tr>
+            tbody.innerHTML = '';
+
+            produtos.forEach(produto => {
+                const cores = produto.cores.join(', ');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${produto.id}</td>
+                    <td><input type="text" value="${produto.nome}" onchange="atualizarProduto(${produto.id}, 'nome', this.value)"></td>
+                    <td><input type="number" value="${produto.custo}" step="0.01" onchange="atualizarProduto(${produto.id}, 'custo', this.value)"></td>
+                    <td><input type="number" value="${produto.preco_atual}" step="0.01" onchange="atualizarProduto(${produto.id}, 'preco_atual', this.value)"></td>
+                    <td><input type="number" value="${produto.estoque}" onchange="atualizarProduto(${produto.id}, 'estoque', this.value)"></td>
+                    <td>${cores}</td>
+                    <td><button onclick="deletarProduto(${produto.id})">🗑️ Deletar</button></td>
                 `;
-            }).join('');
+                tbody.appendChild(tr);
+            });
         }
 
-        async function atualizarProdutoAdmin(id, campo, valor) {
-            try {
-                const updateObj = {};
-                if(campo === 'preco_atual' || campo === 'custo' || campo === 'estoque') {
-                    updateObj[campo] = parseFloat(valor);
+        function atualizarProduto(id, campo, valor) {
+            const produto = produtos.find(p => p.id === id);
+            if(produto) {
+                if(campo === 'custo' || campo === 'preco_atual' || campo === 'estoque') {
+                    produto[campo] = parseFloat(valor);
                 } else {
-                    updateObj[campo] = valor;
+                    produto[campo] = valor;
                 }
-                
-                const { error } = await sb.from('produtos').update(updateObj).eq('id', id);
-                if(error) throw error;
-                mostrarSync();
-            } catch(err) {
-                console.error('❌ Erro:', err.message);
+                salvarDados();
+                render(produtos);
             }
         }
 
-        function removerCor(produtoId, indice) {
-            const prod = produtos.find(p => p.id === produtoId);
-            if(prod && prod.cores) {
-                prod.cores.splice(indice, 1);
-                sb.from('produtos').update({ cores: prod.cores }).eq('id', produtoId);
-                preencherTabelaAdmin();
+        function deletarProduto(id) {
+            if(confirm('Tem certeza que deseja deletar este produto?')) {
+                produtos = produtos.filter(p => p.id !== id);
+                salvarDados();
+                carregarTabelaAdmin();
+                render(produtos);
             }
         }
 
-        function adicionarCorProduto(produtoId) {
-            const inputEl = document.getElementById(`nova-cor-${produtoId}`);
-            const corNova = inputEl.value.trim();
-            if(corNova) {
-                const prod = produtos.find(p => p.id === produtoId);
-                if(prod) {
-                    if(!prod.cores) prod.cores = [];
-                    if(!prod.cores.includes(corNova)) {
-                        prod.cores.push(corNova);
-                        inputEl.value = '';
-                        sb.from('produtos').update({ cores: prod.cores }).eq('id', produtoId);
-                        preencherTabelaAdmin();
-                    } else {
-                        alert("Esta cor já existe!");
-                    }
-                }
-            }
-        }
-
-        async function adicionarNovoProduto() {
+        function adicionarNovoProduto() {
             const id = parseInt(document.getElementById('novo-id').value);
             const nome = document.getElementById('novo-nome').value;
             const custo = parseFloat(document.getElementById('novo-custo').value);
             const preco = parseFloat(document.getElementById('novo-preco').value);
-            const estoque = parseInt(document.getElementById('novo-estoque').value) || 10;
+            const estoque = parseInt(document.getElementById('novo-estoque').value);
             const img = document.getElementById('novo-img').value;
             const ficha = document.getElementById('novo-ficha').value;
-            const cores = document.getElementById('novo-cores').value.split(',').map(c => c.trim()).filter(c => c);
+            const cores = document.getElementById('novo-cores').value.split(',').map(c => c.trim());
 
-            if(!id || !nome || !custo || !preco || !img) {
-                alert("Preencha todos os campos obrigatórios!");
+            if(!id || !nome || !custo || !preco || !estoque) {
+                alert('⚠️ Preencha todos os campos obrigatórios!');
                 return;
             }
 
             if(produtos.find(p => p.id === id)) {
-                alert("ID já existe!");
+                alert('⚠️ Já existe um produto com este ID!');
                 return;
             }
 
-            try {
-                const { error } = await sb.from('produtos').insert([{ id, nome, custo, preco_atual: preco, estoque, img, ficha, cores }]);
-                if(error) throw error;
-                alert("✅ Produto adicionado!");
-                
-                document.getElementById('novo-id').value = '';
-                document.getElementById('novo-nome').value = '';
-                document.getElementById('novo-custo').value = '';
-                document.getElementById('novo-preco').value = '';
-                document.getElementById('novo-estoque').value = '10';
-                document.getElementById('novo-img').value = '';
-                document.getElementById('novo-ficha').value = '';
-                document.getElementById('novo-cores').value = '';
-            } catch(err) {
-                console.error('❌ Erro:', err.message);
-                alert('Erro ao adicionar produto!');
-            }
+            produtos.push({
+                id, nome, custo, preco_atual: preco, estoque, img, ficha, cores
+            });
+
+            salvarDados();
+            carregarTabelaAdmin();
+            render(produtos);
+            alert('✅ Produto adicionado com sucesso!');
+            
+            // Limpar form
+            document.getElementById('novo-id').value = '';
+            document.getElementById('novo-nome').value = '';
+            document.getElementById('novo-custo').value = '';
+            document.getElementById('novo-preco').value = '';
+            document.getElementById('novo-estoque').value = '10';
+            document.getElementById('novo-img').value = '';
+            document.getElementById('novo-ficha').value = '';
+            document.getElementById('novo-cores').value = '';
         }
 
-        async function removerProdutoAdmin(id) {
-            if(confirm("Tem certeza?")) {
-                try {
-                    const { error } = await sb.from('produtos').delete().eq('id', id);
-                    if(error) throw error;
-                } catch(err) {
-                    console.error('❌ Erro:', err.message);
-                }
-            }
-        }
-
-        function gerarRelatorio() {
-            const container = document.getElementById('relatorioVendas');
+        function carregarRelatorio() {
+            const relatorioDiv = document.getElementById('relatorioVendas');
             
             if(vendas.length === 0) {
-                container.innerHTML = '<div class="alert alert-info">📭 Nenhuma venda registrada</div>';
+                relatorioDiv.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma venda registrada</p>';
                 return;
             }
 
-            let totalLucro = 0, totalReceita = 0, totalCusto = 0;
+            let html = '';
+            let totalLucro = 0;
 
-            const html = vendas.map((venda, idx) => {
-                const lucro = venda.total - venda.custo_total - venda.frete;
+            vendas.forEach((venda, index) => {
+                const lucro = venda.total - venda.custo;
                 totalLucro += lucro;
-                totalReceita += venda.total;
-                totalCusto += venda.custo_total;
-
-                return `
+                html += `
                     <div class="relatorio-card">
-                        <strong>#${idx + 1}</strong>
-                        <div class="relatorio-item"><span>Cliente:</span><span>${venda.cliente}</span></div>
-                        <div class="relatorio-item"><span>Subtotal:</span><span>R$ ${venda.subtotal.toFixed(2).replace('.', ',')}</span></div>
-                        <div class="relatorio-item"><span>Frete:</span><span>R$ ${venda.frete.toFixed(2).replace('.', ',')}</span></div>
-                        <div class="relatorio-item"><span>Total:</span><span>R$ ${venda.total.toFixed(2).replace('.', ',')}</span></div>
-                        <div class="relatorio-item"><span>💰 Lucro:</span><span class="${lucro >= 0 ? 'relatorio-lucro' : 'relatorio-prejuizo'}">${lucro >= 0 ? '+' : ''}R$ ${lucro.toFixed(2).replace('.', ',')}</span></div>
+                        <div class="relatorio-item">
+                            <span>#${index + 1} - ${venda.cliente}</span>
+                            <span>${venda.data}</span>
+                        </div>
+                        <div class="relatorio-item">
+                            <span>Valor Total:</span>
+                            <strong>R$ ${tratarPreco(venda.total)}</strong>
+                        </div>
+                        <div class="relatorio-item">
+                            <span>Custo:</span>
+                            <span>R$ ${tratarPreco(venda.custo)}</span>
+                        </div>
+                        <div class="relatorio-item">
+                            <span>Lucro:</span>
+                            <span class="relatorio-lucro">R$ ${tratarPreco(lucro)}</span>
+                        </div>
                     </div>
                 `;
-            }).join('');
+            });
 
-            container.innerHTML = html + `
-                <div class="relatorio-total">
-                    <div>💵 Custo: R$ ${totalCusto.toFixed(2).replace('.', ',')}</div>
-                    <div>💰 Receita: R$ ${totalReceita.toFixed(2).replace('.', ',')}</div>
-                    <div style="font-size: 1.4rem;">📊 LUCRO: R$ ${totalLucro.toFixed(2).replace('.', ',')}</div>
-                </div>
-            `;
+            html += `<div class="relatorio-total">💰 Lucro Total: R$ ${tratarPreco(totalLucro)}</div>`;
+            relatorioDiv.innerHTML = html;
         }
 
-        async function limparVendas() {
-            if(confirm("⚠️ Tem certeza?")) {
-                try {
-                    const { error } = await sb.from('vendas').delete().gte('id', 0);
-                    if(error) throw error;
-                    vendas = [];
-                    gerarRelatorio();
-                    alert("✅ Histórico limpo!");
-                } catch(err) {
-                    console.error('❌ Erro:', err.message);
-                }
+        function limparVendas() {
+            if(confirm('⚠️ Tem certeza? Isto não pode ser desfeito!')) {
+                vendas = [];
+                salvarDados();
+                carregarRelatorio();
+                alert('✅ Histórico de vendas limpo!');
             }
         }
 
-        async function salvarConfig() {
-            try {
-                const { error } = await sb.from('configuracoes').update({
-                    whatsapp: document.getElementById('config-whatsapp').value,
-                    frete: parseFloat(document.getElementById('config-frete').value),
-                    estoque_min: parseInt(document.getElementById('config-estoque-min').value)
-                }).eq('id', 1);
-                
-                if(error) throw error;
-                
-                config = {
-                    whatsapp: document.getElementById('config-whatsapp').value,
-                    frete: parseFloat(document.getElementById('config-frete').value),
-                    estoque_min: parseInt(document.getElementById('config-estoque-min').value)
-                };
-                
-                mostrarSync();
-            } catch(err) {
-                console.error('❌ Erro:', err.message);
-            }
+        function carregarConfig() {
+            const whatsapp = localStorage.getItem('config-whatsapp') || '5562995175110';
+            const frete = localStorage.getItem('config-frete') || '25.00';
+            const estoque_min = localStorage.getItem('config-estoque-min') || '5';
+
+            document.getElementById('config-whatsapp').value = whatsapp;
+            document.getElementById('config-frete').value = frete;
+            document.getElementById('config-estoque-min').value = estoque_min;
         }
 
-        window.onload = inicializar;
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('adminModal');
-            if(event.target === modal) {
-                modal.style.display = 'none';
-                codigoAtual = "";
-            }
+        function salvarConfig() {
+            localStorage.setItem('config-whatsapp', document.getElementById('config-whatsapp').value);
+            localStorage.setItem('config-frete', document.getElementById('config-frete').value);
+            localStorage.setItem('config-estoque-min', document.getElementById('config-estoque-min').value);
+            alert('✅ Configurações salvas!');
         }
+
+        // ==================== BUSCAR CEP ====================
+        function buscarCep(cep) {
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.erro) {
+                        alert('CEP não encontrado');
+                    } else {
+                        document.getElementById('f-rua').value = data.logradouro;
+                        document.getElementById('f-bairro').value = data.bairro;
+                    }
+                });
+        }
+
+        // ==================== SALVAR DADOS ====================
+        function salvarDados() {
+            localStorage.setItem('produtos', JSON.stringify(produtos));
+            localStorage.setItem('vendas', JSON.stringify(vendas));
+        }
+
+        // ==================== INICIALIZAR ====================
+        window.addEventListener('load', () => {
+            carregarProdutos();
+            atualizarContagem();
+        });
     </script>
 </body>
 </html>
+
