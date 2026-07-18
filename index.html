@@ -58,7 +58,7 @@
 
         /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto; }
-        .modal-content { background-color: white; margin: 3% auto; padding: 25px; border-radius: 10px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background-color: white; margin: 3% auto; padding: 25px; border-radius: 10px; width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto; }
         .modal-header { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close:hover { color: black; }
@@ -79,9 +79,9 @@
         .admin-table button:hover { background: #c91a1f; }
 
         /* Cores */
-        .cores-container { display: flex; gap: 8px; flex-wrap: wrap; }
+        .cores-container { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
         .cor-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f0f0; padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.9rem; }
-        .cor-badge button { background: var(--primary); color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem; }
+        .cor-badge button { background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem; margin-left: 5px; }
 
         /* Botões */
         .btn-group-admin { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
@@ -167,6 +167,11 @@
         .relatorio-total { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; font-size: 1.2rem; font-weight: bold; margin-top: 15px; }
 
         .input-box small { color: #666; font-size: 0.85rem; }
+
+        /* Input para adicionar cores */
+        .cores-input-group { display: flex; gap: 8px; margin-top: 8px; }
+        .cores-input-group input { flex: 1; padding: 8px; }
+        .cores-input-group button { padding: 8px 15px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -237,7 +242,7 @@
         </div>
     </div>
 
-    <!-- MODAL ADMIN (COMPLETAMENTE OCULTO ATÉ AUTENTICAÇÃO) -->
+    <!-- MODAL ADMIN -->
     <div id="adminModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -245,7 +250,7 @@
                 <span class="close" onclick="fecharAdmin()">&times;</span>
             </div>
             
-            <!-- LOGIN ADMIN (ÚNICO VISÍVEL INICIALMENTE) -->
+            <!-- LOGIN ADMIN -->
             <div id="loginAdmin" class="login-admin-container">
                 <div class="lock-icon">🔐</div>
                 <h2>Acesso Restrito</h2>
@@ -254,7 +259,7 @@
                 <button class="btn-login" onclick="autenticarAdmin()">🔓 Acessar</button>
             </div>
 
-            <!-- CONTEÚDO ADMIN (OCULTO ATÉ AUTENTICAÇÃO) -->
+            <!-- CONTEÚDO ADMIN -->
             <div id="adminContent" style="display: none;">
                 <!-- ABAS -->
                 <div class="admin-tabs">
@@ -267,7 +272,7 @@
                 <!-- ABA 1: EDITAR PRODUTOS -->
                 <div id="aba-editar" class="admin-tab-content active">
                     <h3>📋 Gerenciar Produtos</h3>
-                    <div style="max-height: 500px; overflow-y: auto;">
+                    <div style="max-height: 600px; overflow-y: auto;">
                         <table class="admin-table">
                             <thead>
                                 <tr>
@@ -276,6 +281,7 @@
                                     <th>Custo</th>
                                     <th>Preço</th>
                                     <th>Estoque</th>
+                                    <th>Cores</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -370,12 +376,14 @@
         const ADMIN_PASSWORD = "369852Isa@";
         const SECRET_CODE = "admeletrozoom";
         const USE_LOCAL_STORAGE = true;
+        const SYNC_INTERVAL = 2000; // Sincroniza a cada 2 segundos
 
         let carrinho = [];
         let metodoSelecionado = null;
         let produtos = [];
         let vendas = [];
         let codigoAtual = "";
+        let ultimoProdutosJSON = "";
 
         // ==================== CAPTURADOR DE CÓDIGO SECRETO ====================
         document.addEventListener('keydown', (e) => {
@@ -395,11 +403,23 @@
             }
         });
 
+        // ==================== SINCRONIZAÇÃO EM TEMPO REAL ====================
+        setInterval(() => {
+            const produtosLocal = localStorage.getItem('produtos');
+            if(produtosLocal && produtosLocal !== ultimoProdutosJSON) {
+                ultimoProdutosJSON = produtosLocal;
+                produtos = JSON.parse(produtosLocal);
+                render(produtos);
+                console.log('✅ Produtos atualizados de outro dispositivo!');
+            }
+        }, SYNC_INTERVAL);
+
         // ==================== CARREGAR PRODUTOS ====================
         function carregarProdutos() {
             const salvos = localStorage.getItem('produtos');
             if(salvos) {
                 produtos = JSON.parse(salvos);
+                ultimoProdutosJSON = salvos;
             } else {
                 produtos = [
                 // --- CAIXAS DE SOM (101 ao 120) ---
@@ -575,7 +595,9 @@
         // ==================== SINCRONIZAÇÃO ====================
         function salvarDados() {
             if(USE_LOCAL_STORAGE) {
-                localStorage.setItem('produtos', JSON.stringify(produtos));
+                const novoJSON = JSON.stringify(produtos);
+                localStorage.setItem('produtos', novoJSON);
+                ultimoProdutosJSON = novoJSON;
                 mostrarSync();
             }
         }
@@ -585,16 +607,6 @@
             syncEl.style.display = 'block';
             setTimeout(() => syncEl.style.display = 'none', 2000);
         }
-
-        window.addEventListener('storage', (e) => {
-            if(e.key === 'produtos') {
-                produtos = JSON.parse(e.newValue);
-                render(produtos);
-            }
-            if(e.key === 'vendas') {
-                vendas = JSON.parse(e.newValue);
-            }
-        });
 
         // ==================== FUNÇÕES ADMIN ====================
         function abrirAdmin() {
@@ -642,6 +654,12 @@
             tbody.innerHTML = produtos.map(p => {
                 const estoqueMinimo = parseInt(localStorage.getItem('config_estoque-min')) || 5;
                 const avisoEstoque = p.estoque <= estoqueMinimo ? '⚠️' : '';
+                const coresHTML = p.cores && p.cores.length > 0 ? p.cores.map((cor, idx) => `
+                    <div class="cor-badge">
+                        ${cor}
+                        <button onclick="removerCor(${p.id}, ${idx})">✕</button>
+                    </div>
+                `).join('') : '';
                 
                 return `
                     <tr>
@@ -650,10 +668,45 @@
                         <td><input type="number" value="${p.custo || 0}" step="0.01" onchange="atualizarProdutoEmTempoReal(${p.id}, 'custo', this.value)"></td>
                         <td><input type="number" value="${p.preco_atual}" step="0.01" onchange="atualizarProdutoEmTempoReal(${p.id}, 'preco_atual', this.value)"></td>
                         <td><input type="number" value="${p.estoque}" onchange="atualizarProdutoEmTempoReal(${p.id}, 'estoque', this.value)"> ${avisoEstoque}</td>
+                        <td>
+                            <div class="cores-container">${coresHTML}</div>
+                            <div class="cores-input-group">
+                                <input type="text" placeholder="Nova cor" id="nova-cor-${p.id}">
+                                <button onclick="adicionarCorProduto(${p.id})">+</button>
+                            </div>
+                        </td>
                         <td><button onclick="removerProdutoAdmin(${p.id})" class="btn-danger">❌</button></td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        function removerCor(produtoId, indice) {
+            const prod = produtos.find(p => p.id === produtoId);
+            if(prod && prod.cores) {
+                prod.cores.splice(indice, 1);
+                salvarDados();
+                preencherTabelaAdmin();
+            }
+        }
+
+        function adicionarCorProduto(produtoId) {
+            const inputEl = document.getElementById(`nova-cor-${produtoId}`);
+            const corNova = inputEl.value.trim();
+            if(corNova) {
+                const prod = produtos.find(p => p.id === produtoId);
+                if(prod) {
+                    if(!prod.cores) prod.cores = [];
+                    if(!prod.cores.includes(corNova)) {
+                        prod.cores.push(corNova);
+                        inputEl.value = '';
+                        salvarDados();
+                        preencherTabelaAdmin();
+                    } else {
+                        alert("Esta cor já existe!");
+                    }
+                }
+            }
         }
 
         function atualizarProdutoEmTempoReal(id, campo, valor) {
