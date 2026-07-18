@@ -371,8 +371,8 @@
 
     <script>
         // ==================== CONFIGURAÇÕES SUPABASE ====================
-        const SUPABASE_URL = 'https://ofpynowzozttwajsbcda.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHlub3d6b3p0dHdhanNiY2RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk3NTI2MjAsImV4cCI6MjAyNTMyODYyMH0.Rvg8H8KFj7x-fH-QvgNXxI1vNvL_2L7vXBPvO_bEqnw';
+        const SUPABASE_URL = 'https://siifboaoeybqmmzuwmjy.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaWZib2FvZXlicW1tem53bWpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NjMxOTQsImV4cCI6MjA1NjMzOTE5NH0.gGVbLuDYZLfXj-_B9YeLNjA4mfEQIl6zMPm_PFeaxs4';
         const { createClient } = supabase;
         const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -433,7 +433,6 @@
                 render(produtos);
             } catch(err) {
                 console.error('❌ Erro ao carregar:', err.message);
-                alert('Erro ao carregar produtos: ' + err.message);
             } finally {
                 carregandoProdutos = false;
             }
