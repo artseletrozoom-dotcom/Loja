@@ -376,14 +376,14 @@
         const ADMIN_PASSWORD = "369852Isa@";
         const SECRET_CODE = "admeletrozoom";
         const USE_LOCAL_STORAGE = true;
-        const SYNC_INTERVAL = 2000; // Sincroniza a cada 2 segundos
+        const SYNC_INTERVAL = 1000; // Sincroniza a cada 1 segundo (mais rápido)
 
         let carrinho = [];
         let metodoSelecionado = null;
         let produtos = [];
         let vendas = [];
         let codigoAtual = "";
-        let ultimoProdutosJSON = "";
+        let ultimoProdutosHash = "";
 
         // ==================== CAPTURADOR DE CÓDIGO SECRETO ====================
         document.addEventListener('keydown', (e) => {
@@ -404,22 +404,38 @@
         });
 
         // ==================== SINCRONIZAÇÃO EM TEMPO REAL ====================
-        setInterval(() => {
+        function verificarSincronizacao() {
             const produtosLocal = localStorage.getItem('produtos');
-            if(produtosLocal && produtosLocal !== ultimoProdutosJSON) {
-                ultimoProdutosJSON = produtosLocal;
-                produtos = JSON.parse(produtosLocal);
-                render(produtos);
-                console.log('✅ Produtos atualizados de outro dispositivo!');
+            if(produtosLocal) {
+                const novoHash = JSON.stringify(JSON.parse(produtosLocal)).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+                if(novoHash !== ultimoProdutosHash) {
+                    ultimoProdutosHash = novoHash;
+                    produtos = JSON.parse(produtosLocal);
+                    render(produtos);
+                    console.log('✅ Produtos sincronizados!', new Date().toLocaleTimeString());
+                }
             }
-        }, SYNC_INTERVAL);
+        }
+
+        setInterval(verificarSincronizacao, SYNC_INTERVAL);
+
+        // Também sincronizar quando a página ganha foco
+        window.addEventListener('focus', verificarSincronizacao);
+
+        // Escuta eventos de storage (quando outra aba muda)
+        window.addEventListener('storage', (e) => {
+            if(e.key === 'produtos') {
+                console.log('📡 Recebeu atualização de outro dispositivo!');
+                verificarSincronizacao();
+            }
+        });
 
         // ==================== CARREGAR PRODUTOS ====================
         function carregarProdutos() {
             const salvos = localStorage.getItem('produtos');
             if(salvos) {
                 produtos = JSON.parse(salvos);
-                ultimoProdutosJSON = salvos;
+                ultimoProdutosHash = JSON.stringify(produtos).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
             } else {
                 produtos = [
                 // --- CAIXAS DE SOM (101 ao 120) ---
@@ -597,7 +613,7 @@
             if(USE_LOCAL_STORAGE) {
                 const novoJSON = JSON.stringify(produtos);
                 localStorage.setItem('produtos', novoJSON);
-                ultimoProdutosJSON = novoJSON;
+                ultimoProdutosHash = novoJSON.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
                 mostrarSync();
             }
         }
@@ -718,7 +734,7 @@
                     prod[campo] = valor;
                 }
                 salvarDados();
-                render(produtos);
+                verificarSincronizacao(); // Força atualização imediata
             }
         }
 
@@ -851,7 +867,7 @@
         function salvarConfig() {
             localStorage.setItem('config_whatsapp', document.getElementById('config-whatsapp').value);
             localStorage.setItem('config_frete', document.getElementById('config-frete').value);
-            localStorage.setItem('config_estoque-min', document.getElementById('config-estoque-min').value);
+            localStorage.setItem('config_estoque-min', document.getElementById('config_estoque-min').value);
             mostrarSync();
         }
 
