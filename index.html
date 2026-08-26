@@ -376,14 +376,14 @@
         const ADMIN_PASSWORD = "369852Isa@";
         const SECRET_CODE = "admeletrozoom";
         const USE_LOCAL_STORAGE = true;
-        const SYNC_INTERVAL = 1000;
+        const SYNC_INTERVAL = 2000; // Sincroniza a cada 2 segundos
 
         let carrinho = [];
         let metodoSelecionado = null;
         let produtos = [];
         let vendas = [];
         let codigoAtual = "";
-        let ultimoProdutosHash = "";
+        let ultimoProdutosJSON = "";
 
         // ==================== CAPTURADOR DE CÓDIGO SECRETO ====================
         document.addEventListener('keydown', (e) => {
@@ -404,38 +404,22 @@
         });
 
         // ==================== SINCRONIZAÇÃO EM TEMPO REAL ====================
-        function verificarSincronizacao() {
+        setInterval(() => {
             const produtosLocal = localStorage.getItem('produtos');
-            if(produtosLocal) {
-                const novoHash = JSON.stringify(JSON.parse(produtosLocal)).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
-                if(novoHash !== ultimoProdutosHash) {
-                    ultimoProdutosHash = novoHash;
-                    produtos = JSON.parse(produtosLocal);
-                    render(produtos);
-                    console.log('✅ Produtos sincronizados!', new Date().toLocaleTimeString());
-                }
+            if(produtosLocal && produtosLocal !== ultimoProdutosJSON) {
+                ultimoProdutosJSON = produtosLocal;
+                produtos = JSON.parse(produtosLocal);
+                render(produtos);
+                console.log('✅ Produtos atualizados de outro dispositivo!');
             }
-        }
-
-        setInterval(verificarSincronizacao, SYNC_INTERVAL);
-
-        // Também sincronizar quando a página ganha foco
-        window.addEventListener('focus', verificarSincronizacao);
-
-        // Escuta eventos de storage (quando outra aba muda)
-        window.addEventListener('storage', (e) => {
-            if(e.key === 'produtos') {
-                console.log('📡 Recebeu atualização de outro dispositivo!');
-                verificarSincronizacao();
-            }
-        });
+        }, SYNC_INTERVAL);
 
         // ==================== CARREGAR PRODUTOS ====================
         function carregarProdutos() {
             const salvos = localStorage.getItem('produtos');
             if(salvos) {
                 produtos = JSON.parse(salvos);
-                ultimoProdutosHash = JSON.stringify(produtos).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+                ultimoProdutosJSON = salvos;
             } else {
                 produtos = [
                 // --- CAIXAS DE SOM (101 ao 120) ---
@@ -479,194 +463,164 @@
         }
 
         function tratarPreco(preco) {
-            return parseFloat(preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (!preco) return 0;
+            let p = String(preco).replace('R$', '').replace(/\s/g, '').replace(',', '.');
+            return parseFloat(p) || 0;
         }
 
-        // ==================== RENDER DA VITRINE ====================
+        function nav(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            atualizarValores();
+            window.scrollTo(0,0);
+        }
+
         function render(lista) {
             const vitrine = document.getElementById('vitrine');
-            vitrine.innerHTML = '';
-
-            if(lista.length === 0) {
-                vitrine.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666;">Nenhum produto encontrado</p>';
-                return;
-            }
-
-            lista.forEach(produto => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                const estoqueClass = produto.estoque < 5 ? 'baixo' : '';
-                card.innerHTML = `
-                    <img src="${produto.img}" alt="${produto.nome}">
-                    <strong>${produto.nome}</strong>
-                    <small>${produto.ficha}</small>
-                    <div class="preco">R$ ${tratarPreco(produto.preco_atual)}</div>
-                    <div class="estoque ${estoqueClass}">Estoque: ${produto.estoque}</div>
-                    <button class="btn-add" ${produto.estoque > 0 ? `onclick="adicionarCarrinho(${produto.id})"` : 'disabled'}>
-                        ${produto.estoque > 0 ? '➕ Adicionar' : '❌ Sem Estoque'}
-                    </button>
-                `;
-                vitrine.appendChild(card);
-            });
-        }
-
-        // ==================== CARRINHO ====================
-        function adicionarCarrinho(idProduto) {
-            const produto = produtos.find(p => p.id === idProduto);
-            if(!produto) return;
-
-            const itemExistente = carrinho.find(item => item.id === idProduto);
-            
-            if(itemExistente) {
-                itemExistente.quantidade++;
-            } else {
-                carrinho.push({
-                    id: idProduto,
-                    nome: produto.nome,
-                    preco_atual: produto.preco_atual,
-                    quantidade: 1
-                });
-            }
-
-            produto.estoque--;
-            salvarDados();
-            atualizarContagem();
-            
-            // Animar
-            const btn = event.target;
-            btn.style.background = '#25d366';
-            btn.innerText = '✅ Adicionado!';
-            setTimeout(() => {
-                btn.style.background = '#333';
-                btn.innerText = '➕ Adicionar';
-            }, 1500);
-        }
-
-        function atualizarContagem() {
-            const total = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
-            document.getElementById('contagem-carrinho').innerText = total;
-            
-            const subtotal = carrinho.reduce((acc, item) => acc + (item.preco_atual * item.quantidade), 0);
-            document.getElementById('val-subtotal-vitrine').innerText = tratarPreco(subtotal);
-            document.getElementById('resumo-total-vitrine').style.display = total > 0 ? 'block' : 'none';
-        }
-
-        // ==================== FILTRO ====================
-        function filtrar(termo) {
-            const filtered = produtos.filter(p => 
-                p.nome.toLowerCase().includes(termo.toLowerCase())
-            );
-            render(filtered);
-        }
-
-        // ==================== NAVEGAÇÃO ====================
-        function nav(pagina) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pagina).classList.add('active');
-            
-            if(pagina === 'p-checkout') {
-                atualizarCheckout();
-            }
-        }
-
-        // ==================== CHECKOUT ====================
-        function atualizarCheckout() {
-            const tbody = document.createElement('div');
-            let html = '<div style="max-height: 300px; overflow-y: auto;">';
-            
-            carrinho.forEach(item => {
-                const subtotal = item.preco_atual * item.quantidade;
-                html += `
-                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">
-                        <span>${item.nome} (x${item.quantidade})</span>
-                        <strong>R$ ${tratarPreco(subtotal)}</strong>
+            vitrine.innerHTML = lista.map(p => {
+                const temEstoque = p.estoque > 0;
+                const estoqueClass = p.estoque <= 5 ? 'baixo' : '';
+                return `
+                    <div class="card">
+                        <img src="${p.img}">
+                        <h3>${p.nome}</h3>
+                        <div class="preco">R$ ${tratarPreco(p.preco_atual).toFixed(2).replace('.', ',')}</div>
+                        <div class="estoque ${estoqueClass}">
+                            ${temEstoque ? `📦 ${p.estoque} un.` : '❌ Fora de estoque'}
+                        </div>
+                        ${p.cores && p.cores.length > 0 ? `<small style="color: #666;">🎨 ${p.cores.length} cor(es)</small>` : ''}
+                        <button class="btn-add" onclick="addCarrinho(${p.id})" ${!temEstoque ? 'disabled' : ''}>
+                            ${temEstoque ? 'ADICIONAR 🛒' : 'INDISPONÍVEL'}
+                        </button>
                     </div>
                 `;
-            });
-            
-            html += '</div>';
-            
-            const container = document.querySelector('.container');
-            const carrinhoDiv = container.querySelector('div[id^="carrinho-items"]') || 
-                               Object.assign(document.createElement('div'), { id: 'carrinho-items', innerHTML: html });
-            
-            if(!container.querySelector('div[id^="carrinho-items"]')) {
-                container.insertBefore(carrinhoDiv, container.querySelector('#total-display'));
-            } else {
-                carrinhoDiv.innerHTML = html;
+            }).join('');
+        }
+
+        function addCarrinho(id) {
+            const prod = produtos.find(p => p.id === id);
+            if(prod && prod.estoque > 0) {
+                carrinho.push(JSON.parse(JSON.stringify(prod)));
+                document.getElementById('contagem-carrinho').innerText = carrinho.length;
+                const divSub = document.getElementById('resumo-total-vitrine');
+                divSub.style.display = 'block';
+                atualizarValores();
+                alert(prod.nome + " adicionado ao carrinho!");
             }
+        }
 
-            const subtotal = carrinho.reduce((acc, item) => acc + (item.preco_atual * item.quantidade), 0);
-            const frete = parseFloat(document.getElementById('config-frete')?.value || 25);
-            const total = subtotal + frete;
+        function filtrar(termo) {
+            if(termo.trim() === '') {
+                render(produtos);
+            } else {
+                render(produtos.filter(p => p.nome.toLowerCase().includes(termo.toLowerCase())));
+            }
+        }
 
-            document.getElementById('total-display').innerText = `Total: R$ ${tratarPreco(total)}`;
-            document.getElementById('info-frete').style.display = 'block';
+        function buscarCep(val) {
+            const cep = val.replace(/\D/g, '');
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(r => r.json())
+                .then(d => {
+                    if(!d.erro) {
+                        document.getElementById('f-rua').value = d.logradouro;
+                        document.getElementById('f-bairro').value = d.bairro;
+                        document.getElementById('info-frete').style.display = 'block';
+                        atualizarValores();
+                    }
+                });
+        }
+
+        function atualizarValores() {
+            const taxaEntrega = parseFloat(localStorage.getItem('config_frete')) || 25.00;
+            
+            let sub = 0;
+            carrinho.forEach(i => sub += tratarPreco(i.preco_atual));
+            document.getElementById('val-subtotal-vitrine').innerText = sub.toFixed(2).replace('.', ',');
+            const total = sub > 0 ? sub + taxaEntrega : 0;
+            document.getElementById('total-display').innerText = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
         }
 
         function finalizarPedido() {
+            const WHATSAPP_NUMBER = localStorage.getItem('config_whatsapp') || "5562995175110";
+            const taxaEntrega = parseFloat(localStorage.getItem('config_frete')) || 25.00;
             const nome = document.getElementById('f-nome').value;
-            const zap = document.getElementById('f-zap').value;
             const email = document.getElementById('f-email').value;
-            const rua = document.getElementById('f-rua').value;
-            const bairro = document.getElementById('f-bairro').value;
+            const zap = document.getElementById('f-zap').value;
 
-            if(!nome || !zap || !email || !rua || !bairro) {
-                alert('⚠️ Preencha todos os dados obrigatórios!');
+            if(!nome || carrinho.length === 0) {
+                alert("Preencha todos os dados!");
                 return;
             }
 
-            const subtotal = carrinho.reduce((acc, item) => acc + (item.preco_atual * item.quantidade), 0);
-            const frete = parseFloat(document.getElementById('config-frete')?.value || 25);
-            const total = subtotal + frete;
-
-            let mensagem = `*NOVO PEDIDO* 🛒\n\n`;
-            mensagem += `👤 Cliente: ${nome}\n`;
-            mensagem += `📧 Email: ${email}\n\n`;
-            mensagem += `📦 PRODUTOS:\n`;
-            
-            carrinho.forEach(item => {
-                const subtotal = item.preco_atual * item.quantidade;
-                mensagem += `• ${item.nome} (x${item.quantidade}) - R$ ${tratarPreco(subtotal)}\n`;
+            let produtosTexto = "";
+            let subtotal = 0;
+            carrinho.forEach(i => {
+                let p = tratarPreco(i.preco_atual);
+                subtotal += p;
+                produtosTexto += `✅ *${i.nome}*%0AR$ ${p.toFixed(2).replace('.', ',')}%0A%0A`;
             });
-
-            mensagem += `\n💰 Subtotal: R$ ${tratarPreco(subtotal)}\n`;
-            mensagem += `🚚 Frete: R$ ${tratarPreco(frete)}\n`;
-            mensagem += `*Total: R$ ${tratarPreco(total)}*\n\n`;
-            mensagem += `📍 Endereço:\n${rua}, Quadra ${document.getElementById('f-quadra').value}, Lote ${document.getElementById('f-lote').value}\n${bairro}`;
-
-            const whatsapp = document.getElementById('config-whatsapp')?.value || '5562995175110';
-            const url = `https://wa.me/${whatsapp}?text=${encodeURIComponent(mensagem)}`;
+            const totalFinal = subtotal + taxaEntrega;
+            
+            const msg = `*🛍️ NOVO PEDIDO - ELETROZOOM*%0A%0A*👤 CLIENTE:* ${nome}%0A*📧 EMAIL:* ${email}%0A*📱 WHATSAPP:* ${zap}%0A*📍 ENDEREÇO:* ${document.getElementById('f-rua').value}%0A*🏠 QD/LT:* ${document.getElementById('f-quadra').value}/${document.getElementById('f-lote').value}%0A*🏙️ BAIRRO:* ${document.getElementById('f-bairro').value}%0A%0A*🛒 ITENS:*%0A${produtosTexto}*SUBTOTAL:* R$ ${subtotal.toFixed(2).replace('.', ',')}%0A*FRETE:* R$ ${taxaEntrega.toFixed(2).replace('.', ',')}%0A*💰 TOTAL: R$ ${totalFinal.toFixed(2).replace('.', ',')}*`;
+            
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`);
             
             // Registrar venda
-            vendas.push({
+            const venda = {
                 data: new Date().toLocaleString('pt-BR'),
                 cliente: nome,
-                total: total,
-                custo: carrinho.reduce((acc, item) => {
-                    const prod = produtos.find(p => p.id === item.id);
-                    return acc + (prod.custo * item.quantidade);
-                }, 0),
-                lucro: total - carrinho.reduce((acc, item) => {
-                    const prod = produtos.find(p => p.id === item.id);
-                    return acc + (prod.custo * item.quantidade);
-                }, 0)
-            });
+                itens: carrinho,
+                subtotal: subtotal,
+                frete: taxaEntrega,
+                total: totalFinal,
+                custo_total: carrinho.reduce((acc, item) => acc + (item.custo || 0), 0)
+            };
+            vendas.push(venda);
+            localStorage.setItem('vendas', JSON.stringify(vendas));
 
+            // Atualizar estoque
+            carrinho.forEach(item => {
+                const prod = produtos.find(p => p.id === item.id);
+                if(prod) prod.estoque--;
+            });
             salvarDados();
-            window.open(url, '_blank');
+
+            // Limpar
+            carrinho = [];
+            document.getElementById('contagem-carrinho').innerText = 0;
+            nav('p-vitrine');
         }
 
-        // ==================== ADMIN ====================
+        // ==================== SINCRONIZAÇÃO ====================
+        function salvarDados() {
+            if(USE_LOCAL_STORAGE) {
+                const novoJSON = JSON.stringify(produtos);
+                localStorage.setItem('produtos', novoJSON);
+                ultimoProdutosJSON = novoJSON;
+                mostrarSync();
+            }
+        }
+
+        function mostrarSync() {
+            const syncEl = document.getElementById('syncStatus');
+            syncEl.style.display = 'block';
+            setTimeout(() => syncEl.style.display = 'none', 2000);
+        }
+
+        // ==================== FUNÇÕES ADMIN ====================
         function abrirAdmin() {
             document.getElementById('adminModal').style.display = 'block';
+            document.getElementById('loginAdmin').style.display = 'block';
+            document.getElementById('adminContent').style.display = 'none';
+            document.getElementById('adminSenha').value = '';
+            document.getElementById('adminSenha').focus();
         }
 
         function fecharAdmin() {
             document.getElementById('adminModal').style.display = 'none';
-            document.getElementById('loginAdmin').style.display = 'block';
-            document.getElementById('adminContent').style.display = 'none';
             document.getElementById('adminSenha').value = '';
+            codigoAtual = "";
         }
 
         function autenticarAdmin() {
@@ -674,62 +628,96 @@
             if(senha === ADMIN_PASSWORD) {
                 document.getElementById('loginAdmin').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
-                carregarTabelaAdmin();
-                carregarRelatorio();
-                carregarConfig();
+                preencherTabelaAdmin();
+                carregarConfigurações();
+                gerarRelatorio();
             } else {
-                alert('❌ Senha incorreta!');
+                alert("❌ Senha incorreta!");
+                document.getElementById('adminSenha').value = '';
+                document.getElementById('adminSenha').focus();
             }
         }
 
         function abrirAbaAdmin(aba) {
-            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(`aba-${aba}`).classList.add('active');
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
-
-            if(aba === 'relatorio') carregarRelatorio();
-        }
-
-        function carregarTabelaAdmin() {
-            const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = '';
-
-            produtos.forEach(produto => {
-                const cores = produto.cores.join(', ');
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${produto.id}</td>
-                    <td><input type="text" value="${produto.nome}" onchange="atualizarProduto(${produto.id}, 'nome', this.value)"></td>
-                    <td><input type="number" value="${produto.custo}" step="0.01" onchange="atualizarProduto(${produto.id}, 'custo', this.value)"></td>
-                    <td><input type="number" value="${produto.preco_atual}" step="0.01" onchange="atualizarProduto(${produto.id}, 'preco_atual', this.value)"></td>
-                    <td><input type="number" value="${produto.estoque}" onchange="atualizarProduto(${produto.id}, 'estoque', this.value)"></td>
-                    <td>${cores}</td>
-                    <td><button onclick="deletarProduto(${produto.id})">🗑️ Deletar</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function atualizarProduto(id, campo, valor) {
-            const produto = produtos.find(p => p.id === id);
-            if(produto) {
-                if(campo === 'custo' || campo === 'preco_atual' || campo === 'estoque') {
-                    produto[campo] = parseFloat(valor);
-                } else {
-                    produto[campo] = valor;
-                }
-                salvarDados();
-                render(produtos);
+            document.getElementById('aba-' + aba).classList.add('active');
+            
+            if(aba === 'relatorio') {
+                gerarRelatorio();
             }
         }
 
-        function deletarProduto(id) {
-            if(confirm('Tem certeza que deseja deletar este produto?')) {
-                produtos = produtos.filter(p => p.id !== id);
+        function preencherTabelaAdmin() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = produtos.map(p => {
+                const estoqueMinimo = parseInt(localStorage.getItem('config_estoque-min')) || 5;
+                const avisoEstoque = p.estoque <= estoqueMinimo ? '⚠️' : '';
+                const coresHTML = p.cores && p.cores.length > 0 ? p.cores.map((cor, idx) => `
+                    <div class="cor-badge">
+                        ${cor}
+                        <button onclick="removerCor(${p.id}, ${idx})">✕</button>
+                    </div>
+                `).join('') : '';
+                
+                return `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td><input type="text" value="${p.nome}" onchange="atualizarProdutoEmTempoReal(${p.id}, 'nome', this.value)"></td>
+                        <td><input type="number" value="${p.custo || 0}" step="0.01" onchange="atualizarProdutoEmTempoReal(${p.id}, 'custo', this.value)"></td>
+                        <td><input type="number" value="${p.preco_atual}" step="0.01" onchange="atualizarProdutoEmTempoReal(${p.id}, 'preco_atual', this.value)"></td>
+                        <td><input type="number" value="${p.estoque}" onchange="atualizarProdutoEmTempoReal(${p.id}, 'estoque', this.value)"> ${avisoEstoque}</td>
+                        <td>
+                            <div class="cores-container">${coresHTML}</div>
+                            <div class="cores-input-group">
+                                <input type="text" placeholder="Nova cor" id="nova-cor-${p.id}">
+                                <button onclick="adicionarCorProduto(${p.id})">+</button>
+                            </div>
+                        </td>
+                        <td><button onclick="removerProdutoAdmin(${p.id})" class="btn-danger">❌</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function removerCor(produtoId, indice) {
+            const prod = produtos.find(p => p.id === produtoId);
+            if(prod && prod.cores) {
+                prod.cores.splice(indice, 1);
                 salvarDados();
-                carregarTabelaAdmin();
+                preencherTabelaAdmin();
+            }
+        }
+
+        function adicionarCorProduto(produtoId) {
+            const inputEl = document.getElementById(`nova-cor-${produtoId}`);
+            const corNova = inputEl.value.trim();
+            if(corNova) {
+                const prod = produtos.find(p => p.id === produtoId);
+                if(prod) {
+                    if(!prod.cores) prod.cores = [];
+                    if(!prod.cores.includes(corNova)) {
+                        prod.cores.push(corNova);
+                        inputEl.value = '';
+                        salvarDados();
+                        preencherTabelaAdmin();
+                    } else {
+                        alert("Esta cor já existe!");
+                    }
+                }
+            }
+        }
+
+        function atualizarProdutoEmTempoReal(id, campo, valor) {
+            const prod = produtos.find(p => p.id === id);
+            if(prod) {
+                if(campo === 'preco_atual' || campo === 'custo' || campo === 'estoque') {
+                    prod[campo] = parseFloat(valor);
+                } else {
+                    prod[campo] = valor;
+                }
+                salvarDados();
                 render(produtos);
             }
         }
@@ -739,31 +727,25 @@
             const nome = document.getElementById('novo-nome').value;
             const custo = parseFloat(document.getElementById('novo-custo').value);
             const preco = parseFloat(document.getElementById('novo-preco').value);
-            const estoque = parseInt(document.getElementById('novo-estoque').value);
+            const estoque = parseInt(document.getElementById('novo-estoque').value) || 10;
             const img = document.getElementById('novo-img').value;
             const ficha = document.getElementById('novo-ficha').value;
-            const cores = document.getElementById('novo-cores').value.split(',').map(c => c.trim());
+            const cores = document.getElementById('novo-cores').value.split(',').map(c => c.trim()).filter(c => c);
 
-            if(!id || !nome || !custo || !preco || !estoque) {
-                alert('⚠️ Preencha todos os campos obrigatórios!');
+            if(!id || !nome || !custo || !preco || !img) {
+                alert("Preencha todos os campos obrigatórios!");
                 return;
             }
 
             if(produtos.find(p => p.id === id)) {
-                alert('⚠️ Já existe um produto com este ID!');
+                alert("ID já existe!");
                 return;
             }
 
-            produtos.push({
-                id, nome, custo, preco_atual: preco, estoque, img, ficha, cores
-            });
-
+            produtos.push({ id, nome, custo, preco_atual: preco, estoque, img, ficha, cores });
             salvarDados();
-            carregarTabelaAdmin();
-            render(produtos);
-            alert('✅ Produto adicionado com sucesso!');
+            alert("✅ Produto adicionado com sucesso!");
             
-            // Limpar form
             document.getElementById('novo-id').value = '';
             document.getElementById('novo-nome').value = '';
             document.getElementById('novo-custo').value = '';
@@ -772,100 +754,118 @@
             document.getElementById('novo-img').value = '';
             document.getElementById('novo-ficha').value = '';
             document.getElementById('novo-cores').value = '';
+            
+            preencherTabelaAdmin();
+            render(produtos);
         }
 
-        function carregarRelatorio() {
-            const relatorioDiv = document.getElementById('relatorioVendas');
+        function removerProdutoAdmin(id) {
+            if(confirm("Tem certeza que deseja remover?")) {
+                produtos = produtos.filter(p => p.id !== id);
+                salvarDados();
+                preencherTabelaAdmin();
+                render(produtos);
+            }
+        }
+
+        function gerarRelatorio() {
+            const container = document.getElementById('relatorioVendas');
             
             if(vendas.length === 0) {
-                relatorioDiv.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma venda registrada</p>';
+                container.innerHTML = '<div class="alert alert-info">📭 Nenhuma venda registrada ainda</div>';
                 return;
             }
 
-            let html = '';
             let totalLucro = 0;
+            let totalReceita = 0;
+            let totalCusto = 0;
 
-            vendas.forEach((venda, index) => {
-                const lucro = venda.total - venda.custo;
+            const html = vendas.map((venda, idx) => {
+                const lucro = venda.total - venda.custo_total - venda.frete;
                 totalLucro += lucro;
-                html += `
+                totalReceita += venda.total;
+                totalCusto += venda.custo_total;
+
+                return `
                     <div class="relatorio-card">
+                        <strong>#${vendas.length - idx} - ${venda.data}</strong>
                         <div class="relatorio-item">
-                            <span>#${index + 1} - ${venda.cliente}</span>
-                            <span>${venda.data}</span>
+                            <span>Cliente: ${venda.cliente}</span>
                         </div>
                         <div class="relatorio-item">
-                            <span>Valor Total:</span>
-                            <strong>R$ ${tratarPreco(venda.total)}</strong>
+                            <span>Itens:</span>
+                            <span>${venda.itens.length}</span>
                         </div>
                         <div class="relatorio-item">
-                            <span>Custo:</span>
-                            <span>R$ ${tratarPreco(venda.custo)}</span>
+                            <span>Custo Total:</span>
+                            <span>R$ ${venda.custo_total.toFixed(2).replace('.', ',')}</span>
                         </div>
                         <div class="relatorio-item">
-                            <span>Lucro:</span>
-                            <span class="relatorio-lucro">R$ ${tratarPreco(lucro)}</span>
+                            <span>Subtotal Venda:</span>
+                            <span>R$ ${venda.subtotal.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div class="relatorio-item">
+                            <span>Frete:</span>
+                            <span>R$ ${venda.frete.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div class="relatorio-item">
+                            <span>Total Recebido:</span>
+                            <span>R$ ${venda.total.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div class="relatorio-item">
+                            <span>💰 Lucro:</span>
+                            <span class="${lucro >= 0 ? 'relatorio-lucro' : 'relatorio-prejuizo'}">
+                                ${lucro >= 0 ? '+' : ''}R$ ${lucro.toFixed(2).replace('.', ',')}
+                            </span>
                         </div>
                     </div>
                 `;
-            });
+            }).join('');
 
-            html += `<div class="relatorio-total">💰 Lucro Total: R$ ${tratarPreco(totalLucro)}</div>`;
-            relatorioDiv.innerHTML = html;
+            container.innerHTML = html + `
+                <div class="relatorio-total">
+                    <div style="margin: 10px 0;">💵 Custo Total: R$ ${totalCusto.toFixed(2).replace('.', ',')}</div>
+                    <div style="margin: 10px 0;">💰 Receita Total: R$ ${totalReceita.toFixed(2).replace('.', ',')}</div>
+                    <div style="margin: 10px 0; font-size: 1.4rem;">
+                        📊 LUCRO TOTAL: R$ ${totalLucro.toFixed(2).replace('.', ',')}
+                    </div>
+                </div>
+            `;
         }
 
         function limparVendas() {
-            if(confirm('⚠️ Tem certeza? Isto não pode ser desfeito!')) {
+            if(confirm("⚠️ Tem certeza? Esta ação não pode ser desfeita!")) {
                 vendas = [];
-                salvarDados();
-                carregarRelatorio();
-                alert('✅ Histórico de vendas limpo!');
+                localStorage.setItem('vendas', JSON.stringify(vendas));
+                gerarRelatorio();
+                alert("✅ Histórico de vendas limpo!");
             }
         }
 
-        function carregarConfig() {
-            const whatsapp = localStorage.getItem('config-whatsapp') || '5562995175110';
-            const frete = localStorage.getItem('config-frete') || '25.00';
-            const estoque_min = localStorage.getItem('config-estoque-min') || '5';
-
-            document.getElementById('config-whatsapp').value = whatsapp;
-            document.getElementById('config-frete').value = frete;
-            document.getElementById('config-estoque-min').value = estoque_min;
+        function carregarConfigurações() {
+            document.getElementById('config-whatsapp').value = localStorage.getItem('config_whatsapp') || "5562995175110";
+            document.getElementById('config-frete').value = localStorage.getItem('config_frete') || "25.00";
+            document.getElementById('config-estoque-min').value = localStorage.getItem('config_estoque-min') || "5";
         }
 
         function salvarConfig() {
-            localStorage.setItem('config-whatsapp', document.getElementById('config-whatsapp').value);
-            localStorage.setItem('config-frete', document.getElementById('config-frete').value);
-            localStorage.setItem('config-estoque-min', document.getElementById('config-estoque-min').value);
-            alert('✅ Configurações salvas!');
+            localStorage.setItem('config_whatsapp', document.getElementById('config-whatsapp').value);
+            localStorage.setItem('config_frete', document.getElementById('config-frete').value);
+            localStorage.setItem('config_estoque-min', document.getElementById('config-estoque-min').value);
+            mostrarSync();
         }
 
-        // ==================== BUSCAR CEP ====================
-        function buscarCep(cep) {
-            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                .then(res => res.json())
-                .then(data => {
-                    if(data.erro) {
-                        alert('CEP não encontrado');
-                    } else {
-                        document.getElementById('f-rua').value = data.logradouro;
-                        document.getElementById('f-bairro').value = data.bairro;
-                    }
-                });
-        }
-
-        // ==================== SALVAR DADOS ====================
-        function salvarDados() {
-            localStorage.setItem('produtos', JSON.stringify(produtos));
-            localStorage.setItem('vendas', JSON.stringify(vendas));
-        }
-
-        // ==================== INICIALIZAR ====================
-        window.addEventListener('load', () => {
+        window.onload = () => {
             carregarProdutos();
-            atualizarContagem();
-        });
+        };
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('adminModal');
+            if(event.target === modal) {
+                modal.style.display = 'none';
+                codigoAtual = "";
+            }
+        }
     </script>
 </body>
 </html>
-
